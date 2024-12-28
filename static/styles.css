@@ -1,0 +1,546 @@
+/* General Styles */
+body {
+    font-family: 'Roboto', sans-serif; /* Ensure the clean Roboto font */
+    margin: 0;
+    background: #120c25;
+    color: #d7d7e0; /* Light lavender text */
+    padding: 2rem 0;
+}
+
+header, footer {
+    background-color: #23232f;
+    color: #ffffff;
+    text-align: center;
+    border: none; /* Remove borders */
+}
+
+/* Navigation Links */
+nav a {
+    color: #b7b7ff;
+    text-decoration: none;
+    margin: 0 15px;
+    font-weight: bold;
+    transition: color 0.3s ease;
+}
+
+nav a:hover {
+    color: #d0d0ff;
+}
+
+.form-container{
+    margin-top: 5rem;
+}
+/* Containers */
+.main-container {
+    margin: 0 auto;
+    border: none; /* Remove borders */
+    border-radius: 0; /* Remove rounded corners */
+}
+
+/* Calendar Section */
+.calendar-section {
+    margin-top: 20px;
+    border: none; /* Remove borders */
+    border-radius: 0; /* Remove rounded corners */
+}
+
+.calendar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 90%;
+    margin: 0 auto;
+    padding: 1rem 0;
+    border: none; /* Remove borders */
+}
+
+.calendar-header button {
+    background: None;
+    color: #4c3e73;
+    border: none; /* Remove border */
+    padding: 10px 15px;
+    border-radius: 0; /* Remove rounded corners */
+    cursor: pointer;
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.calendar-header button:hover {
+    background: linear-gradient(45deg, #ff9f6b, #fcb500);
+    box-shadow: 0 0 8px rgba(252, 181, 100, 0.6);
+}
+
+.calendar-header h2 {
+    font-size: 1.5rem;
+    color: #ffffff;
+}
+
+/* Calendar Layout */
+.calendar-layout {
+    display: grid;
+    grid-template-columns: 50px 1fr; /* Left column for labels, right for calendar */
+    gap: 10px;
+    grid-template-rows: 1fr;
+    width: 100%; /* Ensure it fills the width of the container */
+    position: relative;
+    left: -25px;
+}
+
+/* Labels for each week */
+.weekly-labels {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    border: none; /* Remove borders */
+}
+
+.label-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%; /* Make it span the full width of the calendar */
+    height: 100%; /* Match the height of date-box */
+    border: none; /* Remove borders */
+}
+
+.label-header {
+    padding: 33px;
+}
+
+.weekly-label {
+    font-size: 0.8em; /* Same as totals-column font size */
+    color: #4c3e73; /* Light lavender text */
+    text-align: right;
+}
+
+.label-set {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Calendar Grid */
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr); /* Standard 7-day week layout */
+    gap: 10px;
+    width: 100%; /* Ensure it fills the width of the container */
+    padding: 0px 5px;
+}
+
+.date-box {
+    background: #20153f;
+    border: none; /* Remove borders */
+    padding: 10px;
+    color: #4c3e73;
+    text-align: center;
+    border-radius: 0; /* Remove rounded corners */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    height: auto; /* Match the height of label-set */
+}
+
+.date-box:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+}
+
+.date-header {
+    font-weight: bold;
+    text-align: right;
+    color: #b7b7ff;
+}
+
+.positive {
+    color: #63c76a !important; /* Complementary light green */
+}
+
+.negative {
+    color: #ff6b6b !important; /* Soft coral */
+}
+
+.totals-container div {
+    color: #77778a;
+}
+
+.balance {
+    border-top: 2px solid #202033;
+    width: 120%;
+    margin: 5px 0px;
+    padding-top: 5px;
+}
+
+.label-set div:last-child {
+    padding-top: 10px;
+}
+
+/* Totals Container */
+.totals-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Two columns for Actual and Expected */
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.totals-column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.9em;
+}
+
+.totals-column div:first-child {
+    font-size: 0.9em;
+    color: #4c3e73;
+}
+
+/* Table Container */
+.table-container {
+    margin: 5rem auto;
+    color: #d0d0ff;
+}
+
+.table-details {
+    background-color: #20153f;
+    border: none; /* Remove borders */
+    width: 100%;
+    border-radius: 0; /* Remove rounded corners */
+}
+
+table {
+    border-color: #22114D;
+    width: 100%;
+    border-collapse: collapse;
+}
+
+thead {
+    background-color: #22114D;
+}
+
+th{
+    font-size: 0.75em;;
+    color: #71648D;
+    padding: 10px;
+    text-align: left;
+    border-bottom: none; /* Remove borders */
+}
+
+td {
+    color: #b7b7ff;
+    padding: 10px;
+    text-align: left;
+    border-bottom: none; /* Remove borders */
+}
+
+th:first-child {
+    border-radius: 0; /* Remove rounded corners */
+}
+
+th:last-child {
+    border-radius: 0; /* Remove rounded corners */
+}
+
+td input[type="number"],
+td input[type="date"],
+td input[type="checkbox"] {
+    background-color: #59597d;
+    color: #fff;
+    border: none; /* Remove borders */
+    padding: 8px;
+    border-radius: 0; /* Remove rounded corners */
+    width: 100%;
+    box-sizing: border-box;
+    margin: 5px 0;
+}
+
+td input[type="number"]:focus,
+td input[type="date"]:focus {
+    border-color: #b7b7ff;
+    outline: none;
+}
+
+/* Modern Buttons */
+button, .btn {
+    background: linear-gradient(45deg, #b14444, #a06800); /* Gradient background */
+    color: #fff;
+    border: none; /* Remove borders */
+    font-size: 0.9em;
+    border-radius: 20px; /* Remove rounded corners */
+    cursor: pointer;
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+    margin: 10px;
+    padding: 0.5rem 1rem;
+}
+
+button:hover, .btn:hover {
+    background: linear-gradient(45deg, #ff9f6b, #fcb500);
+    box-shadow: 0 0 8px rgba(252, 181, 100, 0.6);
+}
+
+footer {
+    background-color: #23232f;
+    padding: 1rem;
+    text-align: center;
+    color: #fff;
+    margin-top: 10px;
+    width: 100%;
+    border: none; /* Remove borders */
+}
+
+:root {
+    --header-height: 3rem;
+    --nav-width: 68px;
+    --first-color: #4723D9;
+    --first-color-light: #AFA5D9;
+    --white-color: #F7F6FB;
+    --normal-font-size: 1rem;
+    --z-fixed: 100;
+}
+
+.h1, h1, .h2, h2, .h3, h3, .h4, h4, .h5, h5, .h6, h6 {
+    color: #BEBACD !important;
+}
+
+*, ::before, ::after {
+    box-sizing: border-box;
+}
+
+body {
+    position: relative;
+    margin: 0; /* Removed header margin */
+    padding: 2rem 2rem 2rem 0;
+    margin: 0 auto;
+    transition: 0.5s;
+}
+
+a {
+    text-decoration: none;
+}
+
+.l-navbar {
+    position: fixed;
+    top: 0;
+    left: -30%;
+    width: var(--nav-width);
+    height: 100vh;
+    background-color: #20153f;
+    padding: 0.5rem 1rem 0 0;
+    transition: 0.5s;
+    z-index: var(--z-fixed);
+}
+
+.nav {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start; /* Adjusted to align items at the top */
+    overflow: hidden;
+}
+
+.nav_logo,
+.nav_link {
+    display: grid;
+    grid-template-columns: max-content max-content;
+    align-items: center;
+    column-gap: 1rem;
+    padding: 10px;
+}
+
+.nav_logo {
+    margin-bottom: 2rem;
+    border-radius: 0; /* Remove rounded corners */
+}
+
+.nav_logo-icon {
+    font-size: 1.75rem;
+    color: #BDB8D6;
+}
+
+.nav_logo-name {
+    color: #BDB8D6;
+    font-weight: 400;
+}
+
+.nav_link {
+    position: relative;
+    color: var(--first-color-light);
+    margin-bottom: 1.5rem;
+    border-radius: 0; /* Remove rounded corners */
+    transition: 0.3s;
+}
+
+.nav_link:hover {
+    color: var(--white-color);
+}
+
+.nav_icon {
+    font-size: 1.25rem;
+}
+
+.header_toggle {
+    color: var(--white-color);
+    font-size: 1.5rem;
+    cursor: pointer;
+    margin-left: 1.5rem; /* Adjust position within the nav */
+    margin-bottom: 1rem; /* Add spacing below the toggle */
+    border-radius: 0; /* Remove rounded corners */
+}
+
+.show {
+    left: 0;
+}
+
+.body-pd {
+    padding-left: calc(var(--nav-width) + 1rem);
+}
+
+.active {
+    color: var(--white-color);
+}
+
+.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    width: 2px;
+    height: 32px;
+    background-color: var(--white-color);
+    border-radius: 0; /* Remove rounded corners */
+}
+
+.height-100 {
+    height: 100vh;
+}
+
+@media screen and (min-width: 768px) {
+    .container {
+        max-width: 95%;
+    }
+
+    body {
+        padding-left: calc(var(--nav-width) + 2rem);
+    }
+
+    .l-navbar {
+        left: 0;
+        padding: 1rem 1rem 0 0;
+    }
+
+    .show {
+        width: calc(var(--nav-width) + 156px);
+    }
+
+    .body-pd {
+        padding-left: calc(var(--nav-width) + 188px);
+    }
+}
+
+
+/* Modal Styling */
+/* Modal Styling */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; 
+    z-index: 1050; /* Ensure it stays above other elements */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(18, 12, 37, 0.95); /* Semi-transparent background */
+}
+
+.modal-content {
+    background-color: #20153f; /* Match table details background */
+    margin: 5% auto; 
+    padding: 20px;
+    border-radius: 10px; /* Slightly rounded corners for the modal */
+    width: 50%; /* Moderate size */
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6);
+    color: #d7d7e0; /* Light lavender text */
+}
+
+.modal-header, .modal-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header {
+    border-bottom: 1px solid #4c3e73;
+    padding-bottom: 10px;
+}
+
+.modal-footer {
+    border-top: 1px solid #4c3e73;
+    padding-top: 10px;
+}
+
+.modal-header h2 {
+    color: #b7b7ff; /* Lavender text */
+    font-size: 1.5rem;
+    margin: 0;
+}
+
+.modal-body {
+    padding: 10px 0;
+}
+
+/* Input Styling */
+.modal input[type="text"], 
+.modal input[type="number"],
+.modal input[type="date"],
+.modal select {
+    background-color: #2c214f; /* Dark input background */
+    color: #d7d7e0; /* Light text */
+    border: 1px solid #4c3e73;
+    padding: 10px;
+    border-radius: 5px; /* Slightly rounded corners */
+    width: 100%;
+    box-sizing: border-box;
+    margin: 10px 0;
+    font-size: 1rem;
+}
+
+.modal input:focus, 
+.modal select:focus {
+    border-color: #b7b7ff; /* Highlight on focus */
+    outline: none;
+}
+
+/* Button Styling */
+.modal button, 
+.modal .btn {
+    background: linear-gradient(45deg, #b14444, #a06800); /* Gradient background */
+    color: #fff;
+    font-size: 1rem;
+    border-radius: 20px; /* Fully rounded buttons */
+    padding: 10px 15px;
+    border: none;
+    cursor: pointer;
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.modal button:hover, 
+.modal .btn:hover {
+    background: linear-gradient(45deg, #ff9f6b, #fcb500);
+    box-shadow: 0 0 8px rgba(252, 181, 100, 0.6);
+}
+
+/* Close Button */
+.modal-close {
+    background: none;
+    color: #b7b7ff; /* Lavender text */
+    font-size: 1.5rem;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.modal-close:hover {
+    color: #ff9f6b;
+}

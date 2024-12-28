@@ -1,0 +1,5 @@
+Flask
+Flask-SQLAlchemy==3.0.3
+Flask-WTF
+pandas
+Flask-Migrate

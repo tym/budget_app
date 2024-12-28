@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Manage Bills</h2>
+<div class="table-container">
+    <!-- Add Bill Button -->
+    <button id="add-bill-button" class="add-button">Add Bill</button>
+
+    <!-- Table of bills -->
+    <div class="table-details">
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Amount</th>
+                    <th>Due Day</th>
+                    <th>Category</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for bill in bills %}
+                <tr>
+                    <td>{{ bill.name }}</td>
+                    <td>{{ bill.amount }}</td>
+                    <td>{{ bill.due_day }}</td>
+                    <td>{{ bill.category }}</td>
+                    <td>
+                        <!-- Form to delete a bill -->
+                        <form method="POST" action="{{ url_for('bills.delete_bill', bill_id=bill.id) }}" style="display:inline;">
+                            <input type="submit" class="btn delete-btn" value="Delete" onclick="return confirm('Are you sure you want to delete this bill?');">
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal for Adding a New Bill -->
+<div id="add-bill-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-button">&times;</span>
+        <h3>Add a New Bill</h3>
+        <form method="POST" action="{{ url_for('bills.manage_bills') }}">
+            <label for="bill-name">Name:</label>
+            <input type="text" id="bill-name" name="bill-name" required class="dark-input">
+
+            <label for="bill-amount">Amount:</label>
+            <input type="number" id="bill-amount" name="bill-amount" required class="dark-input">
+
+            <label for="bill-due-day">Due Day:</label>
+            <input type="number" id="bill-due-day" name="bill-due_day" min="1" max="31" required class="dark-input">
+
+            <label for="bill-category">Category:</label>
+            <input type="text" id="bill-category" name="bill-category" list="category-options" class="dark-input">
+            <datalist id="category-options">
+                <option value="Rent"></option>
+                <option value="Utilities"></option>
+                <option value="Internet"></option>
+                <option value="Groceries"></option>
+                <option value="Insurance"></option>
+            </datalist>
+
+            <button type="submit" class="dark-button">Add Bill</button>
+        </form>
+    </div>
+</div>
+
+<script>
+// Modal functionality
+const modal = document.getElementById("add-bill-modal");
+const addButton = document.getElementById("add-bill-button");
+const closeButton = document.querySelector(".close-button");
+
+addButton.onclick = function() {
+    modal.style.display = "block";
+};
+
+closeButton.onclick = function() {
+    modal.style.display = "none";
+};
+
+window.onclick = function(event) {
+    if (event.target == modal) {
+        modal.style.display = "none";
+    }
+};
+</script>
+
+{% endblock %}

@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Expenses</h2>
+
+
+<!-- Modal for adding a new expense -->
+<div id="expense-modal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <form method="POST" action="{{ url_for('expenses.manage_expenses') }}">
+            <label for="expense-date">Date:</label>
+            <input type="date" id="expense-date" name="expense-date" required>
+
+            <label for="expense-description">Description:</label>
+            <input type="text" id="expense-description" name="expense-description" required>
+
+            <label for="expense-amount">Amount:</label>
+            <input type="number" id="expense-amount" name="expense-amount" required>
+
+            <label for="expense-category">Category:</label>
+            <input type="text" id="expense-category" name="expense-category" list="expense-categories">
+            <datalist id="expense-categories">
+                <option value="Groceries"></option>
+                <option value="Entertainment"></option>
+                <option value="Travel"></option>
+            </datalist>
+
+            <label for="bill-select">Associated Bill or Income:</label>
+            <select id="bill-select" name="bill-id">
+                <option value="">None</option>
+                {% for entry in budget_view_data %}
+                {% if entry.entry_type == "Bill" or entry.entry_type == "Income" %}
+                    <option value="{{ entry.id }}">{{ entry.name }} ({{ entry.expected_date.strftime('%Y-%m-%d') }})</option>
+                {% endif %}
+                {% endfor %}
+            </select>
+
+            <label for="cleared-checkbox">Cleared:</label>
+            <input type="checkbox" id="cleared-checkbox" name="cleared-checkbox">
+
+            <button type="submit" class="btn">Add Expense</button>
+        </form>
+    </div>
+</div>
+
+<!-- Table displaying expenses -->
+<div class="table-container">
+    <button class="btn" id="add-expense-btn">Add Expense</button>
+<!-- Button to open the modal -->
+    <div class="table-details">
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Description</th>
+                    <th>Amount</th>
+                    <th>Category</th>
+                    <th>Assoc. Bill or Income</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for expense in expenses %}
+                <tr>
+                    <td>{{ expense.date }}</td>
+                    <td>{{ expense.description }}</td>
+                    <td>{{ expense.amount }}</td>
+                    <td>{{ expense.category }}</td>
+                    <td>{{ expense.linked_id }}</td>
+                    <td>
+                        <form method="POST" action="{{ url_for('expenses.delete_expense', expense_id=expense.id) }}" style="display:inline;">
+                            <input type="submit" class="btn delete-btn" value="Delete" onclick="return confirm('Are you sure you want to delete this expense?');">
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // Modal handling script
+    const expenseModal = document.getElementById('expense-modal');
+    const expenseBtn = document.getElementById('add-expense-btn');
+    const closeExpenseModal = expenseModal.querySelector('.close');
+
+    expenseBtn.addEventListener('click', () => expenseModal.style.display = 'block');
+    closeExpenseModal.addEventListener('click', () => expenseModal.style.display = 'none');
+    window.addEventListener('click', (event) => {
+        if (event.target == expenseModal) {
+            expenseModal.style.display = 'none';
+        }
+    });
+</script>
+{% endblock %}

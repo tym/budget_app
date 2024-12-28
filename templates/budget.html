@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+    <script type="text/javascript">
+        // Ensure currentDate is globally defined
+    
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get the year and month from Flask variables
+            const year = {{ year }};
+            const month = {{ month }};
+    
+            // Initialize currentDate with the passed year and month
+            currentDate.setFullYear(year);
+            currentDate.setMonth(month - 1); // Adjust for zero-indexed month
+            console.log(`Initial currentDate: ${currentDate}`);
+    
+            // Update the page header to display the current month and year
+            document.getElementById('current-month').textContent = currentDate.toLocaleDateString('default', {
+                year: 'numeric', month: 'long'
+            });
+    
+            // Fetch day data and populate the calendar
+            const url = `/budget/get-day-data?year=${year}&month=${month}`;
+            axios.get(url)
+                .then(response => {
+                    let day_data = response.data;
+                    console.log("Day Data:", day_data);
+                    if (typeof populateCalendar === 'function') {
+                        populateCalendar(year, month, day_data);
+                    } else {
+                        console.error('populateCalendar function is not defined.');
+                    }
+                })
+                .catch(error => {
+                    console.error("Error fetching day_data:", error);
+                });
+        });
+    </script>
+    
+
+<div class="main-container">
+    <section class="calendar-section">
+        <div class="calendar-header">
+            <button id="prev-month-btn">< Previous</button>
+            <h2 id="current-month">{{ month }} {{ year }}</h2>
+            <button id="next-month-btn">Next ></button>
+        </div>
+        <div class="calendar-layout">
+            <div class="weekly-labels"></div> <!-- Container for dynamic labels -->
+            <div id="calendar-grid" class="calendar-grid"></div>
+        </div>
+        
+    <div id="calendar-grid" class="calendar-grid"></div>
+</div>
+      
+        </div>
+    </section>
+    <div class="table-container">
+        <h3>Budget Details</h3>
+        <table class="table-details">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Expected Amount</th>
+                    <th>Actual Amount</th>
+                    <th>Expected Date</th>
+                    <th>Cleared</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if budget_entries %}
+                    {% for entry in budget_entries | sort(attribute='entry_type') %}
+                        {% if entry.expected_date and entry.expected_date.month == month and entry.expected_date.year == year and entry.entry_type != "Expense" %}
+                            <tr>
+                                <td>{{ entry.entry_type }}</td>
+                                <td>{{ entry.name }}</td>
+                                <td>{{ entry.expected_amount }}</td>
+                                <td>{{ entry.actual_amount }}</td>
+                                <td>{{ entry.expected_date.strftime('%m/%d/%Y') if entry.expected_date else 'N/A' }}</td>
+                                <td>{{ 'Yes' if entry.cleared else 'No' }}</td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="6">No data available</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="dayModal" tabindex="-1" aria-labelledby="dayModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="dayModalLabel">Day Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="day-details-content">
+                        <p>Loading...</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Include Bootstrap JS and Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Include jQuery for simplicity -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+
+<script src="{{ url_for('static', filename='calendar.js') }}"></script>
+
+{% endblock %}

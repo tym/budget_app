@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Income</h2>
+
+
+<!-- Modal for adding new income -->
+<div id="income-modal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <form method="POST" action="{{ url_for('income.manage_income') }}">
+            <label for="income-name">Source:</label>
+            <input type="text" id="income-name" name="income-name" required>
+
+            <label for="income-amount">Amount:</label>
+            <input type="number" id="income-amount" name="income-amount" required>
+
+            <label for="income-frequency">Frequency:</label>
+            <select id="income-frequency" name="income-frequency">
+                <option value="weekly">Weekly</option>
+                <option value="biweekly">Every Two Weeks</option>
+                <option value="monthly">Monthly</option>
+            </select>
+
+            <label for="income-day">Day of the Week:</label>
+            <select id="income-day" name="income-day">
+                <option value="monday">Monday</option>
+                <option value="tuesday">Tuesday</option>
+                <option value="wednesday">Wednesday</option>
+                <option value="thursday">Thursday</option>
+                <option value="friday">Friday</option>
+                <option value="saturday">Saturday</option>
+                <option value="sunday">Sunday</option>
+            </select>
+
+            <label for="income-start-date">Start Date:</label>
+            <input type="date" id="income-start-date" name="income-start-date" required>
+
+            <button type="submit" class="btn">Add Income</button>
+        </form>
+    </div>
+</div>
+
+<!-- Table displaying income -->
+<div class="table-container">
+
+    <!-- Button to open the modal -->
+    <button class="btn" id="add-income-btn">Add Income</button>
+    <div class="table-details">
+        <table>
+            <thead>
+                <tr>
+                    <th>Source</th>
+                    <th>Amount</th>
+                    <th>Frequency</th>
+                    <th>Day of the Week</th>
+                    <th>Start Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for income in incomes %}
+                <tr>
+                    <td>{{ income.name }}</td>
+                    <td>{{ income.amount }}</td>
+                    <td>{{ income.frequency }}</td>
+                    <td>{{ income.day_of_week }}</td>
+                    <td>{{ income.start_date }}</td>
+                    <td>
+                        <form method="POST" action="{{ url_for('income.delete_income', income_id=income.id) }}" style="display:inline;">
+                            <button type="submit">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // Modal handling script
+    const incomeModal = document.getElementById('income-modal');
+    const incomeBtn = document.getElementById('add-income-btn');
+    const closeIncomeModal = incomeModal.querySelector('.close');
+
+    incomeBtn.addEventListener('click', () => incomeModal.style.display = 'block');
+    closeIncomeModal.addEventListener('click', () => incomeModal.style.display = 'none');
+    window.addEventListener('click', (event) => {
+        if (event.target == incomeModal) {
+            incomeModal.style.display = 'none';
+        }
+    });
+</script>
+{% endblock %}

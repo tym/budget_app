@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Budget App</title>
+    <link rel="stylesheet" href="/static/styles.css">
+<!-- Include Selectize CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/css/selectize.bootstrap4.min.css" rel="stylesheet" />
+
+    <!-- Include jQuery (required by Selectize) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Include Selectize JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.6/js/standalone/selectize.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <!-- Bootstrap CSS CDN -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css" integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script>
+        document.addEventListener("DOMContentLoaded", function(event) {
+            const showNavbar = (toggleId, navId, bodyId) => {
+                const toggle = document.getElementById(toggleId),
+                    nav = document.getElementById(navId),
+                    bodypd = document.getElementById(bodyId);
+
+                // Validate that all variables exist
+                if (toggle && nav && bodypd) {
+                    toggle.addEventListener('click', () => {
+                        // Show navbar
+                        nav.classList.toggle('show');
+                        // Change icon
+                        toggle.classList.toggle('bx-x');
+                        // Add padding to body
+                        bodypd.classList.toggle('body-pd');
+                    });
+                }
+            };
+
+            showNavbar('header-toggle', 'nav-bar', 'body-pd');
+
+            // Link active toggle
+            const linkColor = document.querySelectorAll('.nav_link');
+            function colorLink() {
+                if (linkColor) {
+                    linkColor.forEach(l => l.classList.remove('active'));
+                    this.classList.add('active');
+                }
+            }
+            linkColor.forEach(l => l.addEventListener('click', colorLink));
+        });
+    </script>
+</head>
+<body id="body-pd">
+    <div class="l-navbar" id="nav-bar">
+        <nav class="nav">
+            <a href="#" class="nav_logo">
+                <i class='bx bx-menu nav_logo-icon' id="header-toggle"></i> <span class="nav_logo-name"></span>
+            </a>
+            <div>
+                <div class="nav_list">
+                    <a href="/budget" class="nav_link"> <i class='bx bx-home nav_logo-icon'></i> <span class="nav_name">Budget</span> </a>
+                    <a href="/income" class="nav_link"> <i class='bx bx-money nav_logo-icon'></i> <span class="nav_name">Income</span> </a> 
+                    <a href="/bills" class="nav_link"> <i class='bx bx-mail-send nav_logo-icon'></i> <span class="nav_name">Bills</span> </a>
+                    <a href="/expenses" class="nav_link"> <i class='bx bx-spreadsheet nav_logo-icon'></i> <span class="nav_name">Expenses</span> </a>
+                </div>
+            </div>
+        </nav>
+    </div>
+
+
+    <!-- jQuery CDN - Slim version (=without AJAX) -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <!-- Popper.JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js" integrity="sha384-cs/chFZiN24E4KMATLdqdvsezGxaGsi4hLGOzlXwp5UZB1LY//20VyM2taTB4QvJ" crossorigin="anonymous"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js" integrity="sha384-uefMccjFJAIv6A+rW+L4AHf99KvxDjWSu1z9VI8SKNVmz4sk7buKt/6v9KI65qnm" crossorigin="anonymous"></script>
+
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+</body>
+
+
+</html>
