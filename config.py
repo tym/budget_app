@@ -1,5 +1,5 @@
 class Config:
-    SQLALCHEMY_DATABASE_URI = 'postgresql://tyborg:546f7b5b4e2e1b90e91081b3c51cd5e8c5084ab1149885dd32f8740bef4c19bd@localhost:5432/budget'
+    SQLALCHEMY_DATABASE_URI = 'postgresql://tymul:SCRAM-SHA-256$4096:0pJzYJVo7trG4iZrRcLzsg==$rMV57XTToYKNgDclqFCMK5/kIC/PJGrgUX2OqwFdkns=:PFRdGK3dafC8ZBhZ3K6u2+7c/vv3No+UsMmW8ZaD60c=@localhost:5432/budget'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # Enable Debugging

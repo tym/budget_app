@@ -41,17 +41,22 @@ def manage_expenses():
             amount = float(request.form.get("expense-amount", 0))
             date_str = request.form.get("expense-date")
             cleared = 'cleared-checkbox' in request.form  # Check if the checkbox is selected
+            bill_id = request.form.get("bill-id")  # Get the bill ID from the form
 
             if not name or not amount or not date_str:
                 return "All fields are required.", 400
 
             date = datetime.strptime(date_str, "%Y-%m-%d").date()
+
+            # Create a new expense, setting linked_id to the selected bill_id if available
             new_expense = Expense(
                 description=name,
                 amount=amount,
                 date=date,
                 cleared=cleared,
+                linked_id=bill_id if bill_id else None  # Store the bill ID or None if no bill is selected
             )
+
             db.session.add(new_expense)
             db.session.commit()
         except Exception as e:
@@ -61,6 +66,15 @@ def manage_expenses():
     expenses = Expense.query.all()
     bills = Bill.query.all()
     incomes = Income.query.all()
+
+    # Look up the linked Bill or Income for each expense
+    for expense in expenses:
+        if expense.linked_id:
+            linked_entry = Bill.query.get(expense.linked_id) or Income.query.get(expense.linked_id)
+            expense.linked_name = linked_entry.name if linked_entry else None
+        else:
+            expense.linked_name = None
+
     return render_template(
         "expenses.html",
         expenses=expenses,
@@ -68,6 +82,7 @@ def manage_expenses():
         bills=bills,
         incomes=incomes
     )
+
 
 @bp.route("/delete/<int:expense_id>", methods=["POST"])
 def delete_expense(expense_id):

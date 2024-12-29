@@ -439,7 +439,7 @@ a {
 }
 
 
-/* Modal Styling */
+
 /* Modal Styling */
 .modal {
     display: none; /* Hidden by default */
@@ -458,7 +458,6 @@ a {
     margin: 5% auto; 
     padding: 20px;
     border-radius: 10px; /* Slightly rounded corners for the modal */
-    width: 50%; /* Moderate size */
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6);
     color: #d7d7e0; /* Light lavender text */
 }
@@ -543,4 +542,24 @@ a {
 
 .modal-close:hover {
     color: #ff9f6b;
+}
+
+
+.tooltip {
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 14px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+}
+
+.clickable {
+    cursor: pointer;
+}
+
+.clickable:hover {
+    text-decoration: underline;
 }
