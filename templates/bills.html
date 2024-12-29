@@ -15,7 +15,7 @@
                     <th>Amount</th>
                     <th>Due Day</th>
                     <th>Category</th>
-                    <th>Action</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -26,9 +26,16 @@
                     <td>{{ bill.due_day }}</td>
                     <td>{{ bill.category }}</td>
                     <td>
-                        <!-- Form to delete a bill -->
+                        <!-- Edit Button -->
+                        <span class="edit-btn" onclick="openEditModal({{ bill.id }}, '{{ bill.name }}', {{ bill.amount }}, {{ bill.due_day }}, '{{ bill.category }}')">
+                            <i class="fas fa-edit"></i>
+                        </span>
+                        
+                        <!-- Delete Button -->
                         <form method="POST" action="{{ url_for('bills.delete_bill', bill_id=bill.id) }}" style="display:inline;">
-                            <input type="submit" class="btn delete-btn" value="Delete" onclick="return confirm('Are you sure you want to delete this bill?');">
+                            <button type="submit" class="btn delete-btn" onclick="return confirm('Are you sure you want to delete this bill?');">
+                                <i class="fas fa-trash-alt"></i> <!-- FontAwesome Trash Icon -->
+                            </button>
                         </form>
                     </td>
                 </tr>
@@ -68,25 +75,72 @@
     </div>
 </div>
 
+<!-- Modal for Editing a Bill -->
+<div id="edit-bill-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-button">&times;</span>
+        <h3>Edit Bill</h3>
+        <form id="edit-bill-form" method="POST" action="{{ url_for('bills.update_bill') }}">
+            <input type="hidden" id="edit-bill-id" name="bill-id">
+
+            <label for="edit-bill-name">Name:</label>
+            <input type="text" id="edit-bill-name" name="bill-name" required class="dark-input">
+
+            <label for="edit-bill-amount">Amount:</label>
+            <input type="number" id="edit-bill-amount" name="bill-amount" required class="dark-input">
+
+            <label for="edit-bill-due-day">Due Day:</label>
+            <input type="number" id="edit-bill-due-day" name="bill-due_day" min="1" max="31" required class="dark-input">
+
+            <label for="edit-bill-category">Category:</label>
+            <input type="text" id="edit-bill-category" name="bill-category" list="edit-category-options" class="dark-input">
+            <datalist id="edit-category-options">
+                <option value="Rent"></option>
+                <option value="Utilities"></option>
+                <option value="Internet"></option>
+                <option value="Groceries"></option>
+                <option value="Insurance"></option>
+            </datalist>
+
+            <button type="submit" class="dark-button">Update Bill</button>
+        </form>
+    </div>
+</div>
+
 <script>
 // Modal functionality
 const modal = document.getElementById("add-bill-modal");
+const editModal = document.getElementById("edit-bill-modal");
 const addButton = document.getElementById("add-bill-button");
-const closeButton = document.querySelector(".close-button");
+const closeButton = document.querySelectorAll(".close-button");
 
 addButton.onclick = function() {
     modal.style.display = "block";
 };
 
-closeButton.onclick = function() {
-    modal.style.display = "none";
-};
+closeButton.forEach(function(button) {
+    button.onclick = function() {
+        modal.style.display = "none";
+        editModal.style.display = "none";
+    };
+});
 
 window.onclick = function(event) {
-    if (event.target == modal) {
+    if (event.target == modal || event.target == editModal) {
         modal.style.display = "none";
+        editModal.style.display = "none";
     }
 };
+
+// Function to open edit modal and populate data
+function openEditModal(id, name, amount, due_day, category) {
+    document.getElementById("edit-bill-id").value = id;
+    document.getElementById("edit-bill-name").value = name;
+    document.getElementById("edit-bill-amount").value = amount;
+    document.getElementById("edit-bill-due-day").value = due_day;
+    document.getElementById("edit-bill-category").value = category;
+    editModal.style.display = "block";
+}
 </script>
 
 {% endblock %}

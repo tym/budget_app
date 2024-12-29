@@ -61,3 +61,27 @@ def delete_bill(bill_id):
         return redirect(url_for('bills.manage_bills'))
     else:
         return 'Bill not found', 404
+    
+@bp.route("/update", methods=['POST'])
+def update_bill():
+    bill_id = request.form.get('bill-id')
+    bill_name = request.form.get('bill-name')
+    bill_amount = request.form.get('bill-amount')
+    bill_due_day = request.form.get('bill-due_day')
+    bill_category = request.form.get('bill-category')
+
+    if not bill_name or not bill_amount or not bill_due_day:
+        return 'Please fill out all fields', 400
+
+    bill_to_update = Bill.query.get(bill_id)
+
+    if bill_to_update:
+        bill_to_update.name = bill_name
+        bill_to_update.amount = float(bill_amount)
+        bill_to_update.due_day = int(bill_due_day)
+        bill_to_update.category = bill_category
+
+        db.session.commit()
+        return redirect(url_for('bills.manage_bills'))
+
+    return 'Bill not found', 404

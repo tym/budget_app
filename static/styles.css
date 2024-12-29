@@ -457,6 +457,7 @@ a {
     background-color: #20153f; /* Match table details background */
     margin: 5% auto; 
     padding: 20px;
+    width: 70%;
     border-radius: 10px; /* Slightly rounded corners for the modal */
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6);
     color: #d7d7e0; /* Light lavender text */
@@ -562,4 +563,42 @@ a {
 
 .clickable:hover {
     text-decoration: underline;
+}
+
+/* Style for edit button */
+.edit-btn {
+    background: transparent;
+    border: none;
+    color: #a06800; /* Orange */
+    cursor: pointer;
+}
+
+.edit-btn:hover {
+    background: transparent;
+    color: #734b01;
+}
+
+
+.edit-btn i{
+    font-size: 17px;
+    font-weight: 400;
+}
+
+/* Style for delete button */
+.delete-btn {
+    background: transparent;
+    border: none;
+    color: #a06800; /* Orange */
+    cursor: pointer;
+}
+
+.delete-btn i{
+    font-size: 17px;
+    font-weight: 400;
+}
+
+.delete-btn:hover {
+    background: transparent;
+    color: #734b01;
+    box-shadow: none;
 }
