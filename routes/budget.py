@@ -166,6 +166,7 @@ def edit_budget_entry():
 
 
 
+
 @bp.route('/get-day-data', methods=["GET"])
 def get_day_data():
     year = request.args.get('year', type=int)
@@ -194,13 +195,20 @@ def get_day_data():
             """
             result = conn.execute(text(query), {'year': year, 'month': month})
             rows = [dict(row._mapping) for row in result]
+            logging.info(f"Rows returned: {rows}")
+            logging.info(f"month: {month}, year: {year}")
+            logging.info(f"Initial day_data: {day_data}")
 
             rows.sort(key=lambda x: x['day'])
 
             for row in rows:
-                day = row['day'].strftime('%Y-%m-%d')
+                day = row['day'].strftime('%Y-%m-%d')  # Convert to string
+                logging.info(f"Converted day to string: {day}")
+                logging.info(f"Checking day: {day} in day_data keys: {list(day_data.keys())}")
 
+                # If day is not in day_data, add it with initialized values
                 if day not in day_data:
+                    logging.info(f"Day {day} not found in day_data. Adding it.")
                     day_data[day] = {
                         'actual_income': 0.0,
                         'actual_bills': 0.0,
@@ -212,16 +220,38 @@ def get_day_data():
                         'expected_balance': previous_expected_balance,
                     }
 
-                if row['entry_type'] == 'Income':
-                    day_data[day]['actual_income'] += row['actual_amount']
-                    day_data[day]['expected_income'] += row['expected_amount']
-                elif row['entry_type'] == 'Bill':
-                    day_data[day]['actual_bills'] += row['actual_amount']
-                    day_data[day]['expected_bills'] += row['expected_amount']
-                elif row['entry_type'] == 'Expense':
-                    day_data[day]['actual_expenses'] += row['actual_amount']
-                    day_data[day]['expected_expenses'] += row['expected_amount']
+                # Log the current entry's amounts before updating
+                logging.info(f"Date: {row['day']} | Entry Type: {row['entry_type']} | Actual Amount: {row['actual_amount']} | Expected Amount: {row['expected_amount']}")
 
+                # Process the row based on its entry type
+                if row['entry_type'] == 'income':
+                    actual_value = float(row['actual_amount']) if row['actual_amount'] is not None else 0.0
+                    expected_value = float(row['expected_amount']) if row['expected_amount'] is not None else 0.0
+                    
+                    logging.info(f"Before Update - Day: {day} | actual_income: {day_data[day]['actual_income']} | expected_income: {day_data[day]['expected_income']}")
+                    day_data[day]['actual_income'] += actual_value
+                    day_data[day]['expected_income'] += expected_value
+                    logging.info(f"After Update - Day: {day} | actual_income: {day_data[day]['actual_income']} | expected_income: {day_data[day]['expected_income']}")
+
+                elif row['entry_type'] == 'bill':
+                    actual_value = float(row['actual_amount']) if row['actual_amount'] is not None else 0.0
+                    expected_value = float(row['expected_amount']) if row['expected_amount'] is not None else 0.0
+                    
+                    logging.info(f"Before Update - Day: {day} | actual_bills: {day_data[day]['actual_bills']} | expected_bills: {day_data[day]['expected_bills']}")
+                    day_data[day]['actual_bills'] += actual_value
+                    day_data[day]['expected_bills'] += expected_value
+                    logging.info(f"After Update - Day: {day} | actual_bills: {day_data[day]['actual_bills']} | expected_bills: {day_data[day]['expected_bills']}")
+
+                elif row['entry_type'] == 'expense':
+                    actual_value = float(row['actual_amount']) if row['actual_amount'] is not None else 0.0
+                    expected_value = float(row['expected_amount']) if row['expected_amount'] is not None else 0.0
+                    
+                    logging.info(f"Before Update - Day: {day} | actual_expenses: {day_data[day]['actual_expenses']} | expected_expenses: {day_data[day]['expected_expenses']}")
+                    day_data[day]['actual_expenses'] += actual_value
+                    day_data[day]['expected_expenses'] += expected_value
+                    logging.info(f"After Update - Day: {day} | actual_expenses: {day_data[day]['actual_expenses']} | expected_expenses: {day_data[day]['expected_expenses']}")
+
+                # Update the actual and expected balances based on new values
                 day_data[day]['actual_balance'] = (
                     previous_actual_balance +
                     day_data[day]['actual_income'] - 
@@ -237,6 +267,12 @@ def get_day_data():
                     day_data[day]['expected_expenses']
                 )
                 previous_expected_balance = day_data[day]['expected_balance']
+
+            logging.info(f"Final day_data: {day_data}")
+
+            logging.debug(f"Rows returned: {rows}")
+            logging.debug(f"month: {month}, year: {year}")
+            logging.debug(f"Initial day_data: {day_data}")
 
         return jsonify(day_data)
 

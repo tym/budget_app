@@ -85,6 +85,8 @@ label {
     color: #ffffff;
 }
 
+
+
 /* Calendar Layout */
 .calendar-layout {
     display: grid;
@@ -177,7 +179,7 @@ label {
 }
 
 .balance {
-    border-top: 2px solid #202033;
+    border-top: 3px solid #35295c;
     width: 120%;
     margin: 5px 0px;
     padding-top: 5px;

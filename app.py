@@ -11,7 +11,14 @@ from routes.expenses import bp as expenses_bp
 from db_setup import setup_budget_table, refresh_budget_tables  # Correct imports
 import logging
 
-
+# Configure the logging level and format
+logging.basicConfig(
+    level=logging.INFO,  # Set to DEBUG for more verbose logs
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler()  # This will print logs to the console
+    ]
+)
 def create_app():
     app = Flask(__name__)
     app.config.from_object('config.Config')  # Load config from object

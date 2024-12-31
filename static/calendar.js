@@ -14,6 +14,28 @@ function updateMonth(offset) {
 
     // Navigate to the new URL with updated parameters
     window.location.href = `/budget?year=${year}&month=${month}`;
+
+
+}
+
+function dayRow () {
+    const dayLabelsContainer = document.querySelector('.day-labels'); // Container for day labels
+    dayLabelsContainer.innerHTML = '';
+    daysOfWeek.forEach(day => {
+        const dayLabel = document.createElement('div');
+        dayLabel.className = 'day-label';
+        dayLabel.textContent = day;
+        daysRow.appendChild(dayLabel);
+    });
+
+    const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const daysRow = document.createElement('div');
+    daysRow.className = 'days-row';
+
+
+    // Insert the daysRow into the dayLabelsContainer
+    dayLabelsContainer.appendChild(daysRow);
+
 }
 
 function populateCalendar(year, month, day_data) {
@@ -21,15 +43,18 @@ function populateCalendar(year, month, day_data) {
     console.log("Day Data:", day_data);
 
     const calendarGrid = document.getElementById('calendar-grid');
+    
     const weeklyLabelsContainer = document.querySelector('.weekly-labels');
     
     // Clear existing content
     calendarGrid.innerHTML = '';
     weeklyLabelsContainer.innerHTML = '';
+    
 
     const firstDay = new Date(year, month - 1, 1);
     const lastDay = new Date(year, month, 0);
     const startDay = firstDay.getDay();
+
 
     // Add empty boxes for days before the first of the month
     for (let i = 0; i < startDay; i++) {
@@ -180,23 +205,23 @@ function populateCalendar(year, month, day_data) {
             });
         }
 
-        // const balanceCell = dateBox.querySelector('.actual.balance');
-        // if (balanceCell && actualBalance > 0) {
-        //     balanceCell.addEventListener('click', function() {
-        //         const balanceDetails = dataForDay.actual_balance_details || [];
-        //         console.log(`Balance details for ${formattedDate}:`, balanceDetails); // Log the details
-        //         // Use the correct URL format with cleared=1 for actual entries
-        //         const url = `/budget/get-details?date=${formattedDate}&entry_type=Balance&cleared=1`;
-        //         fetch(url)
-        //             .then(response => response.json())
-        //             .then(data => {
-        //                 showModal(formattedDate, 'Actual Balance', data, 'actual');
-        //             })
-        //             .catch(error => {
-        //                 console.error('Error fetching balance details:', error);
-        //             });
-        //     });
-        // }
+        const balanceCell = dateBox.querySelector('.actual.balance');
+        if (balanceCell && actualBalance > 0) {
+            balanceCell.addEventListener('click', function() {
+                const balanceDetails = dataForDay.actual_balance_details || [];
+                console.log(`Balance details for ${formattedDate}:`, balanceDetails); // Log the details
+                // Use the correct URL format with cleared=1 for actual entries
+                const url = `/budget/get-details?date=${formattedDate}&entry_type=Balance&cleared=1`;
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        showModal(formattedDate, 'Actual Balance', data, 'actual');
+                    })
+                    .catch(error => {
+                        console.error('Error fetching balance details:', error);
+                    });
+            });
+        }
 
         // Similarly check for expected values...
         const expectedIncomeCell = dateBox.querySelector('.expected.income');
@@ -253,23 +278,23 @@ function populateCalendar(year, month, day_data) {
             });
         }
 
-        // const expectedBalanceCell = dateBox.querySelector('.expected.balance');
-        // if (expectedBalanceCell && expectedBalance > 0) {
-        //     expectedBalanceCell.addEventListener('click', function() {
-        //         const expectedBalanceDetails = dataForDay.expected_balance_details || [];
-        //         console.log(`Expected Balance details for ${formattedDate}:`, expectedBalanceDetails); // Log the details
-        //         // Use the correct URL format with cleared=0 for expected entries
-        //         const url = `/budget/get-details?date=${formattedDate}&entry_type=Balance&cleared=0`;
-        //         fetch(url)
-        //             .then(response => response.json())
-        //             .then(data => {
-        //                 showModal(formattedDate, 'Expected Balance', data, 'expected');
-        //             })
-        //             .catch(error => {
-        //                 console.error('Error fetching expected balance details:', error);
-        //             });
-        //     });
-        // }
+        const expectedBalanceCell = dateBox.querySelector('.expected.balance');
+        if (expectedBalanceCell && expectedBalance > 0) {
+            expectedBalanceCell.addEventListener('click', function() {
+                const expectedBalanceDetails = dataForDay.expected_balance_details || [];
+                console.log(`Expected Balance details for ${formattedDate}:`, expectedBalanceDetails); // Log the details
+                // Use the correct URL format with cleared=0 for expected entries
+                const url = `/budget/get-details?date=${formattedDate}&entry_type=Balance&cleared=0`;
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        showModal(formattedDate, 'Expected Balance', data, 'expected');
+                    })
+                    .catch(error => {
+                        console.error('Error fetching expected balance details:', error);
+                    });
+            });
+        }
     }
 }
 

@@ -10,7 +10,6 @@
         // Initialize currentDate with the passed year and month
         currentDate.setFullYear(year);
         currentDate.setMonth(month - 1); // Adjust for zero-indexed month
-        console.log(`Initial currentDate: ${currentDate}`);
     
         // Update the page header to display the current month and year
         document.getElementById('current-month').textContent = currentDate.toLocaleDateString('default', {
@@ -41,9 +40,11 @@
             <button id="prev-month-btn">&lt; Previous</button>
             <h2 id="current-month"></h2> <!-- Dynamically updated -->
             <button id="next-month-btn">Next &gt;</button>
+            <div class="day-labels"></div>
         </div>
         <div class="calendar-layout">
             <div class="weekly-labels"></div> <!-- Container for dynamic labels -->
+
             <div id="calendar-grid" class="calendar-grid"></div>
         </div>
     </section>
@@ -70,19 +71,19 @@
                         <!-- Name -->
                         <div class="form-group">
                             <label for="entryName">Name</label>
-                            <input type="text" readonly class="form-control-plaintext"  id="entryName" disabled="disabled">
+                            <input type="text" readonly class="form-control-plaintext" id="entryName" disabled="disabled">
                         </div>
     
-                        <!-- Amount -->
-                        <div class="form-">
+                        <!-- Expected Amount -->
+                        <div class="form-group">
                             <label for="entryAmount">Expected Amount</label>
-                            <input type="number" readonly class="form-control-plaintext"  id="entryAmount" disabled="disabled">
+                            <input type="number" readonly class="form-control-plaintext" id="entryAmount" disabled="disabled">
                         </div>
     
                         <!-- Expected Date -->
                         <div class="form-group">
                             <label for="entryDate">Expected Date</label>
-                            <input type="date" readonly class="form-control-plaintext"  id="entryDate" disabled="disabled">
+                            <input type="date" readonly class="form-control-plaintext" id="entryDate" disabled="disabled">
                         </div>
     
                         <!-- Actual Amount -->
@@ -115,9 +116,7 @@
             </div>
         </div>
     </div>
-    
-  
-  
+
     <!-- Table displaying budget details -->
     <div class="table-container table-details">
         <table>
@@ -149,7 +148,6 @@
                     <td>{{ 'Not Expected' if entry.not_expected else '' }}</td>
                     <td><button class="edit-btn">Edit</button></td>
                 </tr>
-                              
                 {% endfor %}
             </tbody>            
         </table>
@@ -160,89 +158,77 @@
     <script src="{{ url_for('static', filename='calendar.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-document.querySelectorAll('.edit-btn').forEach(button => {
- button.addEventListener('click', function() {
-     const row = button.closest('tr');
-     const entryId = row.getAttribute('data-entry-id');
-     const entryType = row.getAttribute('data-entry-type');
+    document.querySelectorAll('.edit-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const row = button.closest('tr');
+            const entryId = row.getAttribute('data-entry-id');
+            const entryType = row.getAttribute('data-entry-type');
 
-     if (!entryId || !entryType) {
-         console.log("Error: Missing entry ID or entry type.");
-         return;
-     }
-
-     const name = row.cells[2].innerText; // Name (description)
-     const expectedAmount = row.cells[5].innerText; // Expected amount
-     const expectedDate = row.cells[3].innerText; // Expected date
-     const actualAmount = row.cells[6].innerText; // Actual amount
-     const actualDate = row.cells[4].innerText; // Actual date
-     const cleared = row.cells[7].innerText === 'Yes'; // Cleared status
-     const notExpected = row.querySelector('.not-expected-select') ? row.querySelector('.not-expected-select').value : 'false'; // Not Expected value
-
-     console.log(`Name: ${name}`);
-     console.log(`Expected Amount: ${expectedAmount}`);
-     console.log(`Expected Date: ${expectedDate}`);
-     console.log(`Actual Amount: ${actualAmount}`);
-     console.log(`Actual Date: ${actualDate}`);
-     console.log(`Cleared: ${cleared}`);
-     console.log(`Not Expected: ${notExpected}`);
-
-     // Convert date format from MM/DD/YYYY to YYYY-MM-DD
-     function formatDateForInput(dateStr) {
-         const [month, day, year] = dateStr.split('/');
-         return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-     }
-
-     // Populate the modal fields
-     document.getElementById('entryId').value = entryId;
-     document.getElementById('entryType').value = entryType;
-     document.getElementById('entryName').value = name;
-     document.getElementById('entryAmount').value = expectedAmount.replace('$', ''); // Remove dollar sign
-     document.getElementById('entryDate').value = formatDateForInput(expectedDate); // Format date for input
-     document.getElementById('actualAmount').value = actualAmount;
-     document.getElementById('actualDate').value = actualDate ? formatDateForInput(actualDate) : ''; // Format actual date if it exists
-     document.getElementById('cleared').checked = cleared;
-     document.getElementById('notExpected').checked = (notExpected === 'true');
-
-
-     $('#editModal').modal('show');
- });
-});
-
-// Add submit handler to save changes
-const form = document.querySelector('#editModal form');
-form.addEventListener('submit', function(event) {
-    event.preventDefault(); // Prevent the default form submission
-
-    const data = {
-        entry_id: document.getElementById('entryId').value,
-        expense_id: document.getElementById('expenseId').value, // You need to add expenseId if required
-        expected_amount: document.getElementById('entryAmount').value,
-        expected_date: document.getElementById('entryDate').value,
-        actual_amount: document.getElementById('actualAmount').value,
-        actual_date: document.getElementById('actualDate').value,
-        cleared: document.getElementById('cleared').checked,
-    };
-
-    // Make the POST request to update the budget entry
-    axios.post('/budget/edit-budget-entry', data)
-        .then(response => {
-            if (response.data.status === 'success') {
-                // Handle success, maybe close the modal and refresh data
-                $('#editModal').modal('hide');
-                location.reload(); // Optionally reload the page to reflect changes
-            } else {
-                alert('Error saving data: ' + response.data.message);
+            if (!entryId || !entryType) {
+                console.log("Error: Missing entry ID or entry type.");
+                return;
             }
-        })
-        .catch(error => {
-            console.error('Error updating budget entry:', error);
-            alert('Error saving data.');
-        });
-});
-</script>
-    
-    
 
+            const name = row.cells[2].innerText; // Name (description)
+            const expectedAmount = row.cells[5].innerText; // Expected amount
+            const expectedDate = row.cells[3].innerText; // Expected date
+            const actualAmount = row.cells[6].innerText; // Actual amount
+            const actualDate = row.cells[4].innerText; // Actual date
+            const cleared = row.cells[7].innerText === 'Yes'; // Cleared status
+            const notExpected = row.querySelector('.not-expected-select') ? row.querySelector('.not-expected-select').value : 'false'; // Not Expected value
+
+            // Convert date format from MM/DD/YYYY to YYYY-MM-DD
+            function formatDateForInput(dateStr) {
+                const [month, day, year] = dateStr.split('/');
+                return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+            }
+
+            // Populate the modal fields
+            document.getElementById('entryId').value = entryId;
+            document.getElementById('entryType').value = entryType;
+            document.getElementById('entryName').value = name;
+            document.getElementById('entryAmount').value = expectedAmount.replace('$', ''); // Remove dollar sign
+            document.getElementById('entryDate').value = formatDateForInput(expectedDate); // Format date for input
+            document.getElementById('actualAmount').value = actualAmount;
+            document.getElementById('actualDate').value = actualDate ? formatDateForInput(actualDate) : ''; // Format actual date if it exists
+            document.getElementById('cleared').checked = cleared;
+            document.getElementById('notExpected').checked = (notExpected === 'true');
+
+            $('#editModal').modal('show');
+        });
+    });
+
+    // Add submit handler to save changes
+    const form = document.querySelector('#editModal form');
+    form.addEventListener('submit', function(event) {
+        event.preventDefault(); // Prevent the default form submission
+
+        const data = {
+            entry_id: document.getElementById('entryId').value,
+            expense_id: document.getElementById('expenseId').value, // You need to add expenseId if required
+            expected_amount: document.getElementById('entryAmount').value,
+            expected_date: document.getElementById('entryDate').value,
+            actual_amount: document.getElementById('actualAmount').value,
+            actual_date: document.getElementById('actualDate').value,
+            cleared: document.getElementById('cleared').checked,
+        };
+
+        // Make the POST request to update the budget entry
+        axios.post('/budget/edit-budget-entry', data)
+            .then(response => {
+                if (response.data.status === 'success') {
+                    // Handle success, maybe close the modal and refresh data
+                    $('#editModal').modal('hide');
+                    location.reload(); // Optionally reload the page to reflect changes
+                } else {
+                    alert('Error saving data: ' + response.data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error updating budget entry:', error);
+                alert('Error saving data.');
+            });
+    });
+    </script>
 </div>
 {% endblock %}
