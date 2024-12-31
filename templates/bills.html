@@ -3,7 +3,6 @@
 {% block content %}
 <h2>Manage Bills</h2>
 
-
 <!-- Table of Bills -->
 <div class="table-container">
     <!-- Add Bill Button -->
@@ -27,7 +26,7 @@
                     <td>{{ bill.name }}</td>
                     <td>{{ bill.amount }}</td>
                     <td>{{ bill.due_day }}</td>
-                    <td>{{ bill.category }}</td>
+                    <td>{{ bill.category.name }}</td> <!-- Display the category name -->
                     <td>
                         <!-- Edit Button -->
                         <button type="button" class="btn btn-primary edit-btn" data-toggle="modal" data-target="#editBillModal"
@@ -35,7 +34,7 @@
                                 data-name="{{ bill.name }}"
                                 data-amount="{{ bill.amount }}"
                                 data-due-day="{{ bill.due_day }}"
-                                data-category="{{ bill.category }}">
+                                data-category="{{ bill.category.name }}"> <!-- Pass the category name -->
                             <i class="fas fa-edit"></i> 
                         </button>
                         <!-- Delete Button -->
@@ -78,13 +77,11 @@
                     </div>
                     <div class="form-group">
                         <label for="bill-category">Category</label>
-                        <input type="text" id="bill-category" name="bill-category" class="form-control" list="category-options">
+                        <input type="text" id="bill-category" name="bill-category" class="form-control" list="category-options" required>
                         <datalist id="category-options">
-                            <option value="Rent"></option>
-                            <option value="Utilities"></option>
-                            <option value="Internet"></option>
-                            <option value="Groceries"></option>
-                            <option value="Insurance"></option>
+                            {% for category in categories %}
+                                <option value="{{ category.name }}"></option>
+                            {% endfor %}
                         </datalist>
                     </div>
                     <button type="submit" class="btn btn-primary">Add Bill</button>
@@ -122,13 +119,11 @@
                     </div>
                     <div class="form-group">
                         <label for="edit-bill-category">Category</label>
-                        <input type="text" id="edit-bill-category" name="bill-category" class="form-control" list="category-options">
+                        <input type="text" id="edit-bill-category" name="bill-category" class="form-control" list="category-options" required>
                         <datalist id="category-options">
-                            <option value="Rent"></option>
-                            <option value="Utilities"></option>
-                            <option value="Internet"></option>
-                            <option value="Groceries"></option>
-                            <option value="Insurance"></option>
+                            {% for category in categories %}
+                                <option value="{{ category.name }}"></option>
+                            {% endfor %}
                         </datalist>
                     </div>
                     <button type="submit" class="btn btn-primary">Update Bill</button>
@@ -154,8 +149,32 @@ $('#editBillModal').on('show.bs.modal', function (event) {
     modal.find('#edit-bill-name').val(name);
     modal.find('#edit-bill-amount').val(amount);
     modal.find('#edit-bill-due-day').val(dueDay);
-    modal.find('#edit-bill-category').val(category);
+    modal.find('#edit-bill-category').val(category);  // Set the category name in the edit modal
 });
+
+$(document).ready(function() {
+    // Handle form submission
+    $('#addBillForm').on('submit', function(event) {
+        event.preventDefault(); // Prevent the default form submission
+
+        var formData = $(this).serialize(); // Get form data
+
+        $.ajax({
+            type: 'POST',
+            url: $(this).attr('action'), // Get the form's action URL
+            data: formData,  // Send form data
+            success: function(response) {
+                // Redirect back to the bills page
+                window.location.href = "{{ url_for('bills.manage_bills') }}";
+            },
+            error: function(error) {
+                // Handle error
+                alert("There was an issue processing the form. Please try again.");
+            }
+        });
+    });
+});
+
 </script>
 
 {% endblock %}

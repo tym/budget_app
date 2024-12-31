@@ -40,11 +40,10 @@
             <button id="prev-month-btn">&lt; Previous</button>
             <h2 id="current-month"></h2> <!-- Dynamically updated -->
             <button id="next-month-btn">Next &gt;</button>
-            <div class="day-labels"></div>
         </div>
         <div class="calendar-layout">
-            <div class="weekly-labels"></div> <!-- Container for dynamic labels -->
 
+            <div class="weekly-labels"></div> <!-- Container for dynamic labels -->
             <div id="calendar-grid" class="calendar-grid"></div>
         </div>
     </section>
@@ -122,7 +121,6 @@
         <table>
             <thead>
                 <tr>
-                    <th>ID</th>
                     <th>Type</th>
                     <th>Description</th>
                     <th>Expected Date</th>
@@ -137,8 +135,10 @@
             <tbody>
                 {% for entry in budget_entries %}
                 <tr data-entry-id="{{ entry.entry_id }}" data-entry-type="{{ entry.entry_type }}">
-                    <td>{{ entry.entry_id }}</td>
-                    <td>{{ entry.entry_type }}</td>
+                    <td>   <p class="{% if entry.entry_type == 'bill' %}billType{% endif %}
+                    {% if entry.entry_type == 'expense' %}expenseType{% endif %}
+                    {% if entry.entry_type == 'income' %}incomeType{% endif %}">
+                    {{ entry.entry_type }}</p></td>
                     <td>{{ entry.description }}</td>
                     <td>{{ entry.expected_date.strftime('%m/%d/%Y') }}</td>
                     <td>{{ entry.actual_date.strftime('%m/%d/%Y') if entry.actual_date else '' }}</td>
@@ -146,7 +146,7 @@
                     <td>{{ entry.actual_amount if entry.actual_amount else '' }}</td>
                     <td>{{ 'Yes' if entry.cleared else 'No' }}</td>
                     <td>{{ 'Not Expected' if entry.not_expected else '' }}</td>
-                    <td><button class="edit-btn">Edit</button></td>
+                    <td><button class="edit-btn"><i class="fas fa-edit"></i></button></td>
                 </tr>
                 {% endfor %}
             </tbody>            
@@ -179,9 +179,20 @@
 
             // Convert date format from MM/DD/YYYY to YYYY-MM-DD
             function formatDateForInput(dateStr) {
-                const [month, day, year] = dateStr.split('/');
-                return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+            if (!dateStr || !dateStr.includes('/')) {
+                return ''; // Return an empty string if the date is invalid or empty
             }
+
+            const [month, day, year] = dateStr.split('/');
+            
+            // If the split didn't return the expected 3 parts, return an empty string
+            if (!month || !day || !year) {
+                return '';
+            }
+
+            return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+            }   
+
 
             // Populate the modal fields
             document.getElementById('entryId').value = entryId;

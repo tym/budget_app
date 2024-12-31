@@ -76,8 +76,9 @@ label {
 }
 
 .calendar-header button:hover {
-    background: linear-gradient(45deg, #ff9f6b, #fcb500);
-    box-shadow: 0 0 8px rgba(252, 181, 100, 0.6);
+    color: #b7b7ff;
+    box-shadow: none;
+    background: transparent;
 }
 
 .calendar-header h2 {
@@ -131,6 +132,22 @@ label {
     flex-direction: column;
     gap: 10px;
 }
+/* Day labels using ::before on the first 7 .date-box elements */
+.date-box::before {
+    content: attr(data-day);
+
+    text-align: center;
+}
+
+/* Example for different day labels */
+.date-box:nth-child(1)::before { content: "Sun"; }
+.date-box:nth-child(2)::before { content: "Mon"; }
+.date-box:nth-child(3)::before { content: "Tue"; }
+.date-box:nth-child(4)::before { content: "Wed"; }
+.date-box:nth-child(5)::before { content: "Thu"; }
+.date-box:nth-child(6)::before { content: "Fri"; }
+.date-box:nth-child(7)::before { content: "Sat"; }
+
 
 /* Calendar Grid */
 .calendar-grid {
@@ -287,12 +304,34 @@ button, .btn {
     margin: 10px;
     padding: 0.5rem 1rem;
 }
-
-button:hover, .btn:hover {
-    background: linear-gradient(45deg, #ff9f6b, #fcb500);
-    box-shadow: 0 0 8px rgba(252, 181, 100, 0.6);
+button:focus, .btn:focus {
+    outline: none;
 }
 
+/* Custom oval pill for income */
+.incomeType {
+    background-color: #70a585;
+    color: white;
+    font-size: 13px;
+    border-radius: 50px;
+    text-transform: capitalize;
+    text-align: center;
+    margin: 5px;
+    color: #0f2919;
+    font-weight: bold;
+  }
+  
+  .billType{
+    background-color: #a74946;
+    color: white;
+    font-size: 13px;
+    border-radius: 50px;
+    text-transform: capitalize;
+    text-align: center;
+    margin: 5px;
+    color: #e8c3c7;
+    font-weight: bold;
+  }
 footer {
     background-color: #23232f;
     padding: 1rem;
@@ -460,7 +499,8 @@ a {
     z-index: 1050; /* Ensure it stays above other elements */
     left: 0;
     top: 0;
-    width: 100%;
+    width: 50%;
+    margin: 0 auto;
     height: 100%;
     overflow: auto;
     background-color: rgba(18, 12, 37, 0.95); /* Semi-transparent background */
@@ -470,7 +510,6 @@ a {
     background-color: #20153f; /* Match table details background */
     margin: 5% auto; 
     padding: 20px;
-    width: 70%;
     border-radius: 10px; /* Slightly rounded corners for the modal */
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6);
     color: #d7d7e0; /* Light lavender text */
@@ -691,3 +730,27 @@ a {
         background-color: #2c214f;
         color: #d7d7e0;
     }
+
+    /* Style the select input field to match your design */
+.category-select {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    background: rgba(255, 255, 255, 0.9);
+    color: #d7d7e0;
+    font-size: 1rem;
+}
+
+/* Style the options in the dropdown */
+#category-options option {
+    background-color: #2c214f;
+    color: #d7d7e0;
+    padding: 10px;
+}
+
+/* Hover effect for options */
+.category-select option:hover {
+    background-color: #8671cc;
+    color: #120c25;
+}

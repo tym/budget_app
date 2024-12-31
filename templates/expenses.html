@@ -23,22 +23,22 @@
             <label for="expense-category">Category:</label>
             <div class="dropdown">
                 <input type="text" id="expense-category" name="expense-category" class="form-control" placeholder="Select or Type Category" required>
-                <ul class="dropdown-menu" id="category-dropdown-menu"> <!-- No 'show' class initially -->
+                <ul class="dropdown-menu" id="category-dropdown-menu">
                     <!-- Default Categories -->
-                    <li><a class="dropdown-item" href="#" data-value="Shopping">Shopping</a></li>
-                    <li><a class="dropdown-item" href="#" data-value="Bills">Bills</a></li>
-                    <li><a class="dropdown-item" href="#" data-value="Entertainment">Entertainment</a></li>
-                    <li><a class="dropdown-item" href="#" data-value="Dining Out">Dining Out</a></li>
-                    <!-- Add more categories as needed -->
+                    {% for category in categories %}
+                        <li><a class="dropdown-item" href="#" data-value="{{ category.name }}">{{ category.name }}</a></li>
+                    {% endfor %}
+                    <li><a class="dropdown-item" href="#" data-value="Custom">Custom</a></li>  <!-- Option for custom category -->
                 </ul>
             </div>
 
             <!-- Hidden input to store a new category if entered -->
             <input type="hidden" id="new-category" name="new-category">
+
             <!-- Associated Bill or Income Field (Dynamic) -->
             <label for="bill-select">Associated Bill or Income:</label>
             <div class="dropdown">
-                <input type="text" id="bill-select" name="bill-id" class="form-control" placeholder="Select Bill or Income" required>
+                <input type="text" id="bill-select" name="bill-id" class="form-control" placeholder="Select Bill or Income">
                 <ul class="dropdown-menu" id="bill-dropdown-menu">
                     <!-- Default option for no association -->
                     <li><a class="dropdown-item" href="#" data-value="">None</a></li>
@@ -109,7 +109,7 @@
 </div>
 
 <script>
-// JavaScript to handle dropdown behavior
+// JavaScript to handle dropdown behavior for categories
 document.addEventListener("DOMContentLoaded", function () {
     const categoryInput = document.getElementById('expense-category');
     const categoryDropdownMenu = document.getElementById('category-dropdown-menu');
@@ -123,126 +123,50 @@ document.addEventListener("DOMContentLoaded", function () {
     // Add event listener to filter the dropdown options as the user types
     categoryInput.addEventListener('input', function () {
         const filter = categoryInput.value.toLowerCase();
-        const items = categoryDropdownMenu.getElementsByTagName('li');
-
-        // Loop through all list items and hide those that don't match the filter
-        for (let i = 0; i < items.length; i++) {
-            const item = items[i];
-            const itemText = item.textContent || item.innerText;
-            item.style.display = itemText.toLowerCase().includes(filter) ? '' : 'none';
-        }
-    });
-
-    // Add event listener for when the user selects a category
-    categoryDropdownMenu.addEventListener('click', function (event) {
-        if (event.target && event.target.matches('.dropdown-item')) {
-            categoryInput.value = event.target.textContent; // Set input value to selected category
-            newCategoryInput.value = event.target.getAttribute('data-value'); // Set hidden input value to selected category
-            categoryDropdownMenu.classList.remove('show'); // Close dropdown after selection
-        }
-    });
-
-    // If user enters a new category
-    categoryInput.addEventListener('blur', function () {
-        const categoryText = categoryInput.value.trim();
-        if (categoryText && !categoryDropdownMenu.querySelector(`a[data-value="${categoryText}"]`)) {
-            // User entered a new category that's not already in the dropdown
-            // Update the hidden input with the new category
-            newCategoryInput.value = categoryText;
-
-            // Add the new category to the dropdown
-            const newCategoryItem = document.createElement('li');
-            newCategoryItem.innerHTML = `<a class="dropdown-item" href="#" data-value="${categoryText}">${categoryText}</a>`;
-            categoryDropdownMenu.appendChild(newCategoryItem);
-        }
-    });
-
-    // Close dropdown if clicked outside
-    window.addEventListener('click', function (e) {
-        if (!e.target.closest('.dropdown')) {
-            categoryDropdownMenu.classList.remove('show');
-        }
-    });
-});
-
-document.addEventListener("DOMContentLoaded", function () {
-    const expenseModal = document.getElementById('expense-modal');
-    const expenseBtn = document.getElementById('add-expense-btn');
-    const closeExpenseModal = document.getElementById('close-expense-modal');
-    const expenseForm = document.getElementById('expense-form');
-
-    if (expenseBtn) {
-        expenseBtn.addEventListener('click', () => {
-            expenseForm.action = '{{ url_for("expenses.manage_expenses") }}'; // Reset to add new
-            expenseModal.style.display = 'block';
+        const items = categoryDropdownMenu.querySelectorAll('.dropdown-item');
+        items.forEach(item => {
+            const text = item.textContent.toLowerCase();
+            item.style.display = text.includes(filter) ? '' : 'none'; // Show or hide item based on filter
         });
-    }
-
-    if (closeExpenseModal) {
-        closeExpenseModal.addEventListener('click', () => expenseModal.style.display = 'none');
-    }
-
-    window.addEventListener('click', (event) => {
-        if (event.target == expenseModal) {
-            expenseModal.style.display = 'none';
-        }
     });
-});
 
-function openEditModal(expenseId, description, amount, category, date, cleared) {
-    // Fill the modal with the current expense data
-    document.getElementById('expense-id').value = expenseId;
-    document.getElementById('expense-description').value = description;
-    document.getElementById('expense-amount').value = amount;
-    document.getElementById('expense-category').value = category;
-    document.getElementById('expense-date').value = date;
-    document.getElementById('cleared-checkbox').checked = cleared;
-
-    // Open the modal
-    const expenseModal = document.getElementById('expense-modal');
-    expenseModal.style.display = 'block';
-}
-</script>
-
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-    const billInput = document.getElementById('bill-select');
-    const billDropdownMenu = document.getElementById('bill-dropdown-menu');
-
-    // Add event listener to filter the dropdown options as the user types
-    billInput.addEventListener('input', function () {
-        const filter = billInput.value.toLowerCase();
-        const items = billDropdownMenu.getElementsByTagName('li');
-
-        // Loop through all list items and hide those that don't match the filter
-        for (let i = 0; i < items.length; i++) {
-            const item = items[i];
-            const itemText = item.textContent || item.innerText;
-            item.style.display = itemText.toLowerCase().includes(filter) ? '' : 'none';
+    // Add new category option when selected
+    categoryDropdownMenu.addEventListener('click', function (event) {
+        if (event.target.classList.contains('dropdown-item')) {
+            const selectedCategory = event.target.getAttribute('data-value');
+            if (selectedCategory === "Custom") {
+                // If "Custom" category is selected, allow user to input a new category
+                categoryInput.placeholder = 'Enter new category';
+                newCategoryInput.value = '';  // Reset hidden field for custom category
+            } else {
+                categoryInput.value = selectedCategory; // Fill input with selected category
+                newCategoryInput.value = '';  // Clear custom input if any
+                categoryDropdownMenu.classList.remove('show'); // Close the dropdown
+            }
         }
     });
 
-    // Add event listener for when the user selects a bill or income
-    billDropdownMenu.addEventListener('click', function (event) {
-        if (event.target && event.target.matches('.dropdown-item')) {
-            billInput.value = event.target.textContent; // Set input value to selected bill/income
-            billDropdownMenu.classList.remove('show'); // Close dropdown after selection
-            document.getElementById('bill-select').value = event.target.getAttribute('data-value'); // Set hidden value
-        }
+    // Open Edit Modal and populate fields with existing expense data
+    window.openEditModal = function(expenseId, description, amount, category, date, cleared) {
+        document.getElementById('expense-id').value = expenseId;
+        document.getElementById('expense-description').value = description;
+        document.getElementById('expense-amount').value = amount;
+        document.getElementById('expense-category').value = category;
+        document.getElementById('expense-date').value = date;
+        document.getElementById('cleared-checkbox').checked = cleared;
+        document.getElementById('expense-modal').style.display = 'block';
+    };
+
+    // Close Modal
+    document.getElementById('close-expense-modal').addEventListener('click', function () {
+        document.getElementById('expense-modal').style.display = 'none';
     });
 
-    // Toggle the dropdown menu visibility when clicking on the input field
-    billInput.addEventListener('focus', function () {
-        billDropdownMenu.classList.add('show');
-    });
-
-    // Close dropdown when clicking outside
-    window.addEventListener('click', function (e) {
-        if (!e.target.closest('.dropdown')) {
-            billDropdownMenu.classList.remove('show');
-        }
+    // Open modal for adding a new expense
+    document.getElementById('add-expense-btn').addEventListener('click', function () {
+        document.getElementById('expense-form').reset();
+        document.getElementById('expense-modal').style.display = 'block';
     });
 });
 </script>
-
 {% endblock %}

@@ -1,7 +1,8 @@
 from flask import Blueprint, render_template, request, redirect, url_for, jsonify, current_app
-from models.models import Bill, db
+from models.models import Bill, db, BillCategory
 from datetime import datetime
 import logging
+from sqlalchemy.exc import IntegrityError
 
 # Set up logging to a file for easier debugging
 logging.basicConfig(filename='app.log', level=logging.DEBUG)
@@ -32,24 +33,43 @@ def manage_bills():
         if not bill_name or not bill_amount or not bill_due_day:
             return 'Please fill out all fields', 400
 
+        # Fetch the category ID from BillCategory or create a new category if not found
+        category = BillCategory.query.filter_by(name=bill_category).first()
+
+        if not category:
+            # If the category does not exist, create it
+            category = BillCategory(name=bill_category)
+            db.session.add(category)
+            try:
+                db.session.commit()  # Commit the new category to the database
+            except IntegrityError:
+                db.session.rollback()  # Rollback if there is any error (e.g., duplicate entry)
+                return 'Category could not be added', 400
+
+        # Create and add the new bill
         new_bill = Bill(
             name=bill_name,
             amount=float(bill_amount),
             due_day=int(bill_due_day),
-            category=bill_category
+            category_id=category.id  # Link to the category ID
         )
         db.session.add(new_bill)
         db.session.commit()
+
+        # Redirect back to the bills page after the form submission
         return redirect(url_for('bills.manage_bills'))
 
+    # Fetch all bills and categories
     now = datetime.now()
     year = now.year
     month = now.month
     bills = Bill.query.all()  # Fetch all bills
+    categories = BillCategory.query.all()  # Fetch all categories
 
     call_refresh_budget_table()  # Call the stored procedure to refresh the budget table
 
-    return render_template("bills.html", bills=bills, year=year, month=month, now=now)
+    return render_template("bills.html", bills=bills, categories=categories, year=year, month=month, now=now)
+
 
 @bp.route("/edit", methods=['POST'])
 def edit_bill():
@@ -65,16 +85,28 @@ def edit_bill():
     if not bill_to_edit:
         return jsonify({'status': 'error', 'message': 'Bill not found'}), 404
 
+    # Check if the category exists or create it
+    category = BillCategory.query.filter_by(name=bill_category).first()
+    if not category:
+        category = BillCategory(name=bill_category)
+        db.session.add(category)
+        try:
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            return jsonify({'status': 'error', 'message': 'Category could not be added'}), 400
+
     # Update the bill's details
     bill_to_edit.name = bill_name
     bill_to_edit.amount = float(bill_amount)
     bill_to_edit.due_day = int(bill_due_day)
-    bill_to_edit.category = bill_category
+    bill_to_edit.category_id = category.id  # Link to the new or existing category
 
     call_refresh_budget_table()  # Call the stored procedure to refresh the budget table
 
     db.session.commit()
 
+    # Redirect back to the bills page after editing the bill
     return redirect(url_for('bills.manage_bills'))
 
 
@@ -96,4 +128,5 @@ def delete_bill(bill_id):
     current_app.logger.info(f"Bill with id {bill_id} deleted successfully.")
 
     call_refresh_budget_table()  # Call the stored procedure to refresh the budget table
+    # Redirect back to the bills page after deleting the bill
     return redirect(url_for('bills.manage_bills'))

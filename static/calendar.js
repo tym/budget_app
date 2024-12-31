@@ -18,26 +18,6 @@ function updateMonth(offset) {
 
 }
 
-function dayRow () {
-    const dayLabelsContainer = document.querySelector('.day-labels'); // Container for day labels
-    dayLabelsContainer.innerHTML = '';
-    daysOfWeek.forEach(day => {
-        const dayLabel = document.createElement('div');
-        dayLabel.className = 'day-label';
-        dayLabel.textContent = day;
-        daysRow.appendChild(dayLabel);
-    });
-
-    const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    const daysRow = document.createElement('div');
-    daysRow.className = 'days-row';
-
-
-    // Insert the daysRow into the dayLabelsContainer
-    dayLabelsContainer.appendChild(daysRow);
-
-}
-
 function populateCalendar(year, month, day_data) {
     console.log(`Populating calendar for year: ${year}, month: ${month}`);
     console.log("Day Data:", day_data);
