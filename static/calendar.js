@@ -99,20 +99,26 @@ function populateCalendar(year, month, day_data) {
             return '';
         }
 
+        function getValueClassBalance(value) {
+            if (value > 0) return 'positive';
+            if (value < 0) return 'negative';
+            return '';
+        }
+
         totalsContainer.innerHTML = ` 
             <div class="totals-column actual-column">
                 <div>Actual</div>
                 <div class="income ${getValueClass(actualIncome)}">${actualIncome.toFixed(2)}</div>
                 <div class="actual bills ${getValueClass(actualBills)}">${actualBills.toFixed(2)}</div>
                 <div class="actual expenses ${getValueClass(actualExpenses)}">${actualExpenses.toFixed(2)}</div>
-                <div class="actual balance ${getValueClass(actualBalance)}">${actualBalance.toFixed(2)}</div>
+                <div class="actual balance ${getValueClassBalance(actualBalance)}">${actualBalance.toFixed(2)}</div>
             </div>
             <div class="totals-column expected-column">
                 <div>Expected</div>
                 <div class="income ${getValueClass(expectedIncome)}">${expectedIncome.toFixed(2)}</div>
                 <div class="expected bills ${getValueClass(expectedBills)}">${expectedBills.toFixed(2)}</div>
                 <div class="expected expenses ${getValueClass(expectedExpenses)}">${expectedExpenses.toFixed(2)}</div>
-                <div class="expected balance ${getValueClass(expectedBalance)}">${expectedBalance.toFixed(2)}</div>
+                <div class="expected balance ${getValueClassBalance(expectedBalance)}">${expectedBalance.toFixed(2)}</div>
             </div>
         `;
 
@@ -174,23 +180,23 @@ function populateCalendar(year, month, day_data) {
             });
         }
 
-        const balanceCell = dateBox.querySelector('.actual.balance');
-        if (balanceCell && actualBalance > 0) {
-            balanceCell.addEventListener('click', function() {
-                const balanceDetails = dataForDay.actual_balance_details || [];
-                console.log(`Balance details for ${formattedDate}:`, balanceDetails); // Log the details
-                // Use the correct URL format with cleared=1 for actual entries
-                const url = `/budget/get-details?date=${formattedDate}&entry_type=Balance&cleared=1`;
-                fetch(url)
-                    .then(response => response.json())
-                    .then(data => {
-                        showModal(formattedDate, 'Actual Balance', data, 'actual');
-                    })
-                    .catch(error => {
-                        console.error('Error fetching balance details:', error);
-                    });
-            });
-        }
+        // const balanceCell = dateBox.querySelector('.actual.balance');
+        // if (balanceCell && actualBalance > 0) {
+        //     balanceCell.addEventListener('click', function() {
+        //         const balanceDetails = dataForDay.actual_balance_details || [];
+        //         console.log(`Balance details for ${formattedDate}:`, balanceDetails); // Log the details
+        //         // Use the correct URL format with cleared=1 for actual entries
+        //         const url = `/budget/get-details?date=${formattedDate}&entry_type=Balance&cleared=1`;
+        //         fetch(url)
+        //             .then(response => response.json())
+        //             .then(data => {
+        //                 showModal(formattedDate, 'Actual Balance', data, 'actual');
+        //             })
+        //             .catch(error => {
+        //                 console.error('Error fetching balance details:', error);
+        //             });
+        //     });
+        // }
 
         // Similarly check for expected values...
         const expectedIncomeCell = dateBox.querySelector('.expected.income');
@@ -247,23 +253,23 @@ function populateCalendar(year, month, day_data) {
             });
         }
 
-        const expectedBalanceCell = dateBox.querySelector('.expected.balance');
-        if (expectedBalanceCell && expectedBalance > 0) {
-            expectedBalanceCell.addEventListener('click', function() {
-                const expectedBalanceDetails = dataForDay.expected_balance_details || [];
-                console.log(`Expected Balance details for ${formattedDate}:`, expectedBalanceDetails); // Log the details
-                // Use the correct URL format with cleared=0 for expected entries
-                const url = `/budget/get-details?date=${formattedDate}&entry_type=Balance&cleared=0`;
-                fetch(url)
-                    .then(response => response.json())
-                    .then(data => {
-                        showModal(formattedDate, 'Expected Balance', data, 'expected');
-                    })
-                    .catch(error => {
-                        console.error('Error fetching expected balance details:', error);
-                    });
-            });
-        }
+        // const expectedBalanceCell = dateBox.querySelector('.expected.balance');
+        // if (expectedBalanceCell && expectedBalance > 0) {
+        //     expectedBalanceCell.addEventListener('click', function() {
+        //         const expectedBalanceDetails = dataForDay.expected_balance_details || [];
+        //         console.log(`Expected Balance details for ${formattedDate}:`, expectedBalanceDetails); // Log the details
+        //         // Use the correct URL format with cleared=0 for expected entries
+        //         const url = `/budget/get-details?date=${formattedDate}&entry_type=Balance&cleared=0`;
+        //         fetch(url)
+        //             .then(response => response.json())
+        //             .then(data => {
+        //                 showModal(formattedDate, 'Expected Balance', data, 'expected');
+        //             })
+        //             .catch(error => {
+        //                 console.error('Error fetching expected balance details:', error);
+        //             });
+        //     });
+        // }
     }
 }
 

@@ -2,11 +2,14 @@
 
 {% block content %}
 <h2>Manage Bills</h2>
+
+
+<!-- Table of Bills -->
 <div class="table-container">
     <!-- Add Bill Button -->
-    <button id="add-bill-button" class="add-button">Add Bill</button>
-
-    <!-- Table of bills -->
+    <button id="add-bill-button" class="btn btn-success mb-3" data-toggle="modal" data-target="#addBillModal">
+        <i class="fas fa-plus"></i> Add Bill
+    </button>
     <div class="table-details">
         <table>
             <thead>
@@ -27,14 +30,18 @@
                     <td>{{ bill.category }}</td>
                     <td>
                         <!-- Edit Button -->
-                        <span class="edit-btn" onclick="openEditModal({{ bill.id }}, '{{ bill.name }}', {{ bill.amount }}, {{ bill.due_day }}, '{{ bill.category }}')">
-                            <i class="fas fa-edit"></i>
-                        </span>
-                        
+                        <button type="button" class="btn btn-primary edit-btn" data-toggle="modal" data-target="#editBillModal"
+                                data-id="{{ bill.bill_id }}"
+                                data-name="{{ bill.name }}"
+                                data-amount="{{ bill.amount }}"
+                                data-due-day="{{ bill.due_day }}"
+                                data-category="{{ bill.category }}">
+                            <i class="fas fa-edit"></i> 
+                        </button>
                         <!-- Delete Button -->
-                        <form method="POST" action="{{ url_for('bills.delete_bill', bill_id=bill.id) }}" style="display:inline;">
+                        <form method="POST" action="{{ url_for('bills.delete_bill', bill_id=bill.bill_id) }}" style="display:inline;">
                             <button type="submit" class="btn delete-btn" onclick="return confirm('Are you sure you want to delete this bill?');">
-                                <i class="fas fa-trash-alt"></i> <!-- FontAwesome Trash Icon -->
+                                <i class="fas fa-trash-alt"></i> 
                             </button>
                         </form>
                     </td>
@@ -42,105 +49,113 @@
                 {% endfor %}
             </tbody>
         </table>
-    </div>
+    </div> 
 </div>
 
 <!-- Modal for Adding a New Bill -->
-<div id="add-bill-modal" class="modal">
-    <div class="modal-content">
-        <span class="close-button">&times;</span>
-        <h3>Add a New Bill</h3>
-        <form method="POST" action="{{ url_for('bills.manage_bills') }}">
-            <label for="bill-name">Name:</label>
-            <input type="text" id="bill-name" name="bill-name" required class="dark-input">
-
-            <label for="bill-amount">Amount:</label>
-            <input type="number" id="bill-amount" name="bill-amount" required class="dark-input">
-
-            <label for="bill-due-day">Due Day:</label>
-            <input type="number" id="bill-due-day" name="bill-due_day" min="1" max="31" required class="dark-input">
-
-            <label for="bill-category">Category:</label>
-            <input type="text" id="bill-category" name="bill-category" list="category-options" class="dark-input">
-            <datalist id="category-options">
-                <option value="Rent"></option>
-                <option value="Utilities"></option>
-                <option value="Internet"></option>
-                <option value="Groceries"></option>
-                <option value="Insurance"></option>
-            </datalist>
-
-            <button type="submit" class="dark-button">Add Bill</button>
-        </form>
+<div class="modal fade" id="addBillModal" tabindex="-1" role="dialog" aria-labelledby="addBillModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addBillModalLabel">Add New Bill</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" action="{{ url_for('bills.manage_bills') }}">
+                    <div class="form-group">
+                        <label for="bill-name">Bill Name</label>
+                        <input type="text" id="bill-name" name="bill-name" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="bill-amount">Amount</label>
+                        <input type="number" id="bill-amount" name="bill-amount" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="bill-due_day">Due Day</label>
+                        <input type="number" id="bill-due_day" name="bill-due_day" class="form-control" required min="1" max="31">
+                    </div>
+                    <div class="form-group">
+                        <label for="bill-category">Category</label>
+                        <input type="text" id="bill-category" name="bill-category" class="form-control" list="category-options">
+                        <datalist id="category-options">
+                            <option value="Rent"></option>
+                            <option value="Utilities"></option>
+                            <option value="Internet"></option>
+                            <option value="Groceries"></option>
+                            <option value="Insurance"></option>
+                        </datalist>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Bill</button>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 
 <!-- Modal for Editing a Bill -->
-<div id="edit-bill-modal" class="modal">
-    <div class="modal-content">
-        <span class="close-button">&times;</span>
-        <h3>Edit Bill</h3>
-        <form id="edit-bill-form" method="POST" action="{{ url_for('bills.update_bill') }}">
-            <input type="hidden" id="edit-bill-id" name="bill-id">
+<div class="modal fade" id="editBillModal" tabindex="-1" role="dialog" aria-labelledby="editBillModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editBillModalLabel">Edit Bill</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" action="{{ url_for('bills.edit_bill') }}">
+                    <input type="hidden" id="edit-bill-id" name="bill-id">
 
-            <label for="edit-bill-name">Name:</label>
-            <input type="text" id="edit-bill-name" name="bill-name" required class="dark-input">
-
-            <label for="edit-bill-amount">Amount:</label>
-            <input type="number" id="edit-bill-amount" name="bill-amount" required class="dark-input">
-
-            <label for="edit-bill-due-day">Due Day:</label>
-            <input type="number" id="edit-bill-due-day" name="bill-due_day" min="1" max="31" required class="dark-input">
-
-            <label for="edit-bill-category">Category:</label>
-            <input type="text" id="edit-bill-category" name="bill-category" list="edit-category-options" class="dark-input">
-            <datalist id="edit-category-options">
-                <option value="Rent"></option>
-                <option value="Utilities"></option>
-                <option value="Internet"></option>
-                <option value="Groceries"></option>
-                <option value="Insurance"></option>
-            </datalist>
-
-            <button type="submit" class="dark-button">Update Bill</button>
-        </form>
+                    <div class="form-group">
+                        <label for="edit-bill-name">Name</label>
+                        <input type="text" id="edit-bill-name" name="bill-name" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-bill-amount">Amount</label>
+                        <input type="number" id="edit-bill-amount" name="bill-amount" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-bill-due-day">Due Day</label>
+                        <input type="number" id="edit-bill-due-day" name="bill-due_day" class="form-control" required min="1" max="31">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-bill-category">Category</label>
+                        <input type="text" id="edit-bill-category" name="bill-category" class="form-control" list="category-options">
+                        <datalist id="category-options">
+                            <option value="Rent"></option>
+                            <option value="Utilities"></option>
+                            <option value="Internet"></option>
+                            <option value="Groceries"></option>
+                            <option value="Insurance"></option>
+                        </datalist>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Update Bill</button>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
-// Modal functionality
-const modal = document.getElementById("add-bill-modal");
-const editModal = document.getElementById("edit-bill-modal");
-const addButton = document.getElementById("add-bill-button");
-const closeButton = document.querySelectorAll(".close-button");
+// Modal functionality to populate fields with data from the edit button's data attributes
+$('#editBillModal').on('show.bs.modal', function (event) {
+    var button = $(event.relatedTarget); // Button that triggered the modal
+    var id = button.data('id');
+    var name = button.data('name');
+    var amount = button.data('amount');
+    var dueDay = button.data('due-day');
+    var category = button.data('category');
 
-addButton.onclick = function() {
-    modal.style.display = "block";
-};
-
-closeButton.forEach(function(button) {
-    button.onclick = function() {
-        modal.style.display = "none";
-        editModal.style.display = "none";
-    };
+    // Populate modal fields
+    var modal = $(this);
+    modal.find('#edit-bill-id').val(id);
+    modal.find('#edit-bill-name').val(name);
+    modal.find('#edit-bill-amount').val(amount);
+    modal.find('#edit-bill-due-day').val(dueDay);
+    modal.find('#edit-bill-category').val(category);
 });
-
-window.onclick = function(event) {
-    if (event.target == modal || event.target == editModal) {
-        modal.style.display = "none";
-        editModal.style.display = "none";
-    }
-};
-
-// Function to open edit modal and populate data
-function openEditModal(id, name, amount, due_day, category) {
-    document.getElementById("edit-bill-id").value = id;
-    document.getElementById("edit-bill-name").value = name;
-    document.getElementById("edit-bill-amount").value = amount;
-    document.getElementById("edit-bill-due-day").value = due_day;
-    document.getElementById("edit-bill-category").value = category;
-    editModal.style.display = "block";
-}
 </script>
 
 {% endblock %}

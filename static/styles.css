@@ -30,6 +30,17 @@ nav a:hover {
 .form-container{
     margin-top: 5rem;
 }
+
+.form-control::placeholder {
+    color: #d7d7e0; /* Light text */
+  }
+
+label {
+    color: #b7b7ff;
+    font-size: 14px
+
+}
+
 /* Containers */
 .main-container {
     margin: 0 auto;
@@ -56,7 +67,7 @@ nav a:hover {
 
 .calendar-header button {
     background: None;
-    color: #4c3e73;
+    color: #8e7fb9;
     border: none; /* Remove border */
     padding: 10px 15px;
     border-radius: 0; /* Remove rounded corners */
@@ -109,7 +120,7 @@ nav a:hover {
 
 .weekly-label {
     font-size: 0.8em; /* Same as totals-column font size */
-    color: #4c3e73; /* Light lavender text */
+    color: #8e7fb9; /* Light lavender text */
     text-align: right;
 }
 
@@ -132,7 +143,7 @@ nav a:hover {
     background: #20153f;
     border: none; /* Remove borders */
     padding: 10px;
-    color: #4c3e73;
+    color: #8e7fb9;
     text-align: center;
     border-radius: 0; /* Remove rounded corners */
     display: flex;
@@ -194,7 +205,7 @@ nav a:hover {
 
 .totals-column div:first-child {
     font-size: 0.9em;
-    color: #4c3e73;
+    color: #8e7fb9;
 }
 
 /* Table Container */
@@ -222,7 +233,7 @@ thead {
 
 th{
     font-size: 0.75em;;
-    color: #71648D;
+    color: #8e7fb9;
     padding: 10px;
     text-align: left;
     border-bottom: none; /* Remove borders */
@@ -470,12 +481,12 @@ a {
 }
 
 .modal-header {
-    border-bottom: 1px solid #4c3e73;
+    border-bottom: 1px solid #8e7fb9;
     padding-bottom: 10px;
 }
 
 .modal-footer {
-    border-top: 1px solid #4c3e73;
+    border-top: 1px solid #8e7fb9;
     padding-top: 10px;
 }
 
@@ -496,7 +507,7 @@ a {
 .modal select {
     background-color: #2c214f; /* Dark input background */
     color: #d7d7e0; /* Light text */
-    border: 1px solid #4c3e73;
+    border: 1px solid #8e7fb9;
     padding: 10px;
     border-radius: 5px; /* Slightly rounded corners */
     width: 100%;
@@ -504,6 +515,10 @@ a {
     margin: 10px 0;
     font-size: 1rem;
 }
+
+.modal::placeholder {
+    color: #d7d7e0; /* Light text */
+  }
 
 .modal input:focus, 
 .modal select:focus {
@@ -545,6 +560,11 @@ a {
     color: #ff9f6b;
 }
 
+.form-control-plaintext {
+    background-color: transparent !important;
+    border: none !important;
+}
+
 
 .tooltip {
     position: absolute;
@@ -571,11 +591,22 @@ a {
     border: none;
     color: #a06800; /* Orange */
     cursor: pointer;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2rem; /* Adjust size if needed */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    margin: 0.2rem;
+    transition: color 0.3s ease;
 }
 
 .edit-btn:hover {
     background: transparent;
     color: #734b01;
+    box-shadow: none;
 }
 
 
@@ -590,6 +621,16 @@ a {
     border: none;
     color: #a06800; /* Orange */
     cursor: pointer;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2rem; /* Adjust size if needed */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    margin: 0.2rem;
+    transition: color 0.3s ease;
 }
 
 .delete-btn i{
@@ -602,3 +643,49 @@ a {
     color: #734b01;
     box-shadow: none;
 }
+
+    /* Style the dropdown input field to match your design */
+    .dropdown {
+        position: relative;
+        width: 100%;
+    }
+
+    .dropdown input {
+        width: 100%;
+        padding: 10px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        background: rgba(255, 255, 255, 0.9);
+        color: #d7d7e0;
+    }
+
+    /* Dropdown list container */
+    .dropdown-menu {
+        background-color: #2c214f; /* Dark input background */
+        color: #d7d7e0; /* Light text */
+        padding: 10px;
+        border-radius: 5px; /* Slightly rounded corners */
+        width: 100%;
+        box-sizing: border-box;
+        margin: 10px 0;
+        font-size: 1rem;
+    }
+
+    .dropdown-menu.show {
+        display: block;
+    }
+
+    .dropdown-item {
+        cursor: pointer;
+        color: #d7d7e0; /* Light text */
+    }
+
+    .dropdown-item:hover {
+        background-color:  #8671cc;
+        color: #120c25;
+    }
+
+    #bill-select option:hover {
+        background-color: #2c214f;
+        color: #d7d7e0;
+    }

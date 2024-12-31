@@ -1,51 +1,52 @@
 from flask import Blueprint, render_template, jsonify, request
 from sqlalchemy.sql import text
 import logging
-logging.basicConfig(level=logging.INFO)
 from models.models import db
 from datetime import datetime
+
+logging.basicConfig(level=logging.INFO)
 
 bp = Blueprint('budget', __name__, url_prefix='/budget')
 
 # Route to render the budget page
 @bp.route("/", methods=["GET"])
 def budget_home():
-    # Get the current year and month
     current_year = datetime.now().year
     current_month = datetime.now().month
 
-    # Get the year and month from the query parameters, if available
     year = request.args.get('year', type=int, default=current_year)
     month = request.args.get('month', type=int, default=current_month)
 
-    # Query the materialized view to get budget entries
     try:
         with db.engine.connect() as conn:
             query = """
             SELECT 
+                bd.entry_id AS entry_id,            
                 bd.entry_type,
-                bd.name as description,
+                bd.description AS description,
                 bd.expected_date,
                 bd.expected_amount,
-                e.amount AS actual_amount,
-                e.date AS actual_date,  -- Fetching actual date from expenses table
-                bd.cleared
-            FROM budget_view bd
-            LEFT JOIN expenses e ON bd.expense_id = e.id
-            WHERE EXTRACT(YEAR FROM bd.expected_date) = :year
-            AND EXTRACT(MONTH FROM bd.expected_date) = :month
-            AND (bd.expense_id IS NULL OR e.id IS NOT NULL)  -- Only fetch actual date if there's a linked expense
+                bd.actual_amount,
+                bd.actual_date,
+                bd.cleared,
+                bd.not_expected
+            FROM budget_table bd
+            WHERE (
+                (EXTRACT(YEAR FROM bd.expected_date) = :year AND EXTRACT(MONTH FROM bd.expected_date) = :month)
+                OR 
+                (EXTRACT(YEAR FROM bd.actual_date) = :year AND EXTRACT(MONTH FROM bd.actual_date) = :month)
+            )
             ORDER BY bd.expected_date;
             """
             result = conn.execute(text(query), {'year': year, 'month': month})
             budget_entries = [dict(row._mapping) for row in result]
-        
+
         return render_template("budget.html", year=year, month=month, budget_entries=budget_entries)
 
     except Exception as e:
         logging.error(f"Error fetching budget entries: {e}")
         return render_template("budget.html", year=year, month=month, budget_entries=[])
-    
+
 @bp.route('/get-details', methods=["GET"])
 def get_details():
     date_str = request.args.get('date', type=str)
@@ -53,10 +54,7 @@ def get_details():
     cleared = request.args.get('cleared', type=str)
 
     try:
-        # Convert string date to datetime object
         date = datetime.strptime(date_str, '%Y-%m-%d')
-
-        # Define the WHERE clause for cleared based on the passed parameter
         cleared_condition = ""
         if cleared == "0":  # Means uncleared
             cleared_condition = "AND (bd.cleared IS NULL OR bd.cleared = 'No')"
@@ -65,27 +63,27 @@ def get_details():
 
         with db.engine.connect() as conn:
             query = f"""
-                SELECT 
-                    bd.entry_type,
-                    bd.name,
-                    bd.expected_date,
-                    bd.expected_amount,
-                    e.amount AS actual_amount,
-                    e.date AS actual_date,
-                    bd.cleared
-                FROM budget_view bd
-                LEFT JOIN expenses e ON bd.expense_id = e.id
-                WHERE 
-                    DATE(bd.expected_date) = :date
-                    AND bd.entry_type = :entry_type
-                    {cleared_condition}  -- Dynamically adds cleared filter
-                ORDER BY bd.expected_date;
+            SELECT 
+                bd.entry_type,
+                bd.description,
+                bd.expected_date,
+                bd.expected_amount,
+                bd.actual_amount,
+                bd.actual_date,
+                bd.cleared
+            FROM budget_table bd
+            WHERE 
+                (YEAR(bd.expected_date) = :year AND MONTH(bd.expected_date) = :month) 
+                OR (YEAR(bd.actual_date) = :year AND MONTH(bd.actual_date) = :month)
+                AND bd.entry_type = :entry_type
+                {cleared_condition}
+            ORDER BY bd.expected_date;
+
             """
 
             result = conn.execute(text(query), {'date': date, 'entry_type': entry_type})
             details = [dict(row._mapping) for row in result]
 
-            # Process data for expected and actual values
             for entry in details:
                 if entry['cleared'] == 'Yes':
                     entry['amount'] = entry['actual_amount']
@@ -98,11 +96,76 @@ def get_details():
 
     except Exception as e:
         logging.error(f"Error fetching details for {date_str}: {e}")
-        return jsonify([])  # Return an empty list on error
+        return jsonify([])
+
+@bp.route('/edit-budget-entry', methods=['POST'])
+def edit_budget_entry():
+    data = request.json
+    entry_id = data.get('entry_id')
+    actual_amount = data.get('actual_amount')
+    actual_date = data.get('actual_date')
+    cleared = data.get('cleared')
+    not_expected = data.get('not_expected')
+
+    try:
+        # Debugging: Log the received data
+        logging.info(f"Received data: {data}")
+
+        # Ensure None for empty fields to pass NULL to the database
+        actual_amount = None if actual_amount == '' else actual_amount
+        actual_date = None if actual_date == '' else actual_date
+        cleared = None if cleared == '' else cleared
+        not_expected = None if not_expected == '' else not_expected
+
+        # Update the `expenses` table if the `cleared` field is not None
+        if cleared is not None and entry_id.startswith('Expense'):
+            update_expense_sql = """
+            UPDATE expenses
+            SET cleared = :cleared
+            WHERE expense_id = :expense_id
+            """
+            db.session.execute(text(update_expense_sql), {
+                'cleared': cleared, 
+                'expense_id': entry_id.replace('Expense', '')
+            })
+
+        # Update the `budget_table`
+        update_budget_sql = """
+        UPDATE budget_table
+        SET actual_amount = :actual_amount,
+            actual_date = :actual_date,
+            not_expected = :not_expected
+        WHERE entry_id = :entry_id
+        """
+        result = db.session.execute(text(update_budget_sql), {
+            'actual_amount': actual_amount,
+            'actual_date': actual_date,
+            'not_expected': not_expected,
+            'entry_id': entry_id
+        })
+
+        # Debugging: Log the number of rows affected
+        logging.info(f"Rows affected in budget_table: {result.rowcount}")
+
+        # Call the stored procedure to refresh the table
+        refresh_sql = "CALL public.refresh_budget_tables();"
+        db.session.execute(text(refresh_sql))
+
+        # Commit the changes
+        db.session.flush()
+        db.session.commit()
+        logging.info("Changes committed successfully.")
+
+        return jsonify({'status': 'success', 'message': 'Budget entry updated successfully'}), 200
+
+    except Exception as e:
+        # Rollback on error
+        db.session.rollback()
+        logging.error(f"Error occurred: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
 
-# Route to get day data
 @bp.route('/get-day-data', methods=["GET"])
 def get_day_data():
     year = request.args.get('year', type=int)
@@ -110,25 +173,28 @@ def get_day_data():
 
     day_data = {}
     previous_actual_balance = 0.0
-    previous_expected_balance = 0.0  # New tracking for expected balance
+    previous_expected_balance = 0.0
 
     try:
         with db.engine.connect() as conn:
             query = """
-                SELECT 
-                    DATE(expected_date) AS day,
-                    entry_type,
-                    SUM(CASE WHEN cleared = 'Yes' THEN expected_amount ELSE 0 END) AS actual_amount,
-                    SUM(CASE WHEN cleared IS NULL OR cleared != 'Yes' THEN expected_amount ELSE 0 END) AS expected_amount
-                FROM budget_view
-                WHERE EXTRACT(YEAR FROM expected_date) = :year
-                  AND EXTRACT(MONTH FROM expected_date) = :month
-                GROUP BY DATE(expected_date), entry_type
-                ORDER BY DATE(expected_date), entry_type;
+            SELECT 
+                DATE(expected_date) AS day,
+                entry_type,
+                SUM(CASE WHEN not_expected IS FALSE AND cleared = 'Yes' THEN expected_amount ELSE 0 END) AS actual_amount,
+                SUM(CASE WHEN not_expected IS FALSE AND (cleared IS NULL OR cleared != 'Yes') THEN expected_amount ELSE 0 END) AS expected_amount
+            FROM budget_table
+            WHERE (
+                (EXTRACT(YEAR FROM expected_date) = :year AND EXTRACT(MONTH FROM expected_date) = :month)
+                OR 
+                (EXTRACT(YEAR FROM actual_date) = :year AND EXTRACT(MONTH FROM actual_date) = :month)
+            )
+            GROUP BY DATE(expected_date), entry_type
+            ORDER BY DATE(expected_date), entry_type;
             """
             result = conn.execute(text(query), {'year': year, 'month': month})
             rows = [dict(row._mapping) for row in result]
-            
+
             rows.sort(key=lambda x: x['day'])
 
             for row in rows:
@@ -171,11 +237,9 @@ def get_day_data():
                     day_data[day]['expected_expenses']
                 )
                 previous_expected_balance = day_data[day]['expected_balance']
-                
-
 
         return jsonify(day_data)
 
     except Exception as e:
-        logging.error(f"Error generating day data: {e}")
+        logging.error(f"Error fetching day data: {e}")
         return jsonify({})

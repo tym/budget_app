@@ -1,166 +1,198 @@
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import text
 from models.models import db
+import logging
 
-def setup_budget_view_and_triggers():
-    # SQL to drop the materialized view if it exists
-    drop_materialized_view_sql = """
-    DROP MATERIALIZED VIEW IF EXISTS budget_view CASCADE;
-    """
+logging.basicConfig(level=logging.INFO)
 
-    # SQL to create the materialized view with an id column
-    create_materialized_view_sql = """
-    CREATE MATERIALIZED VIEW budget_view AS
-    WITH first_period AS (
-        SELECT 
-            i.id AS income_id,
-            i.name,
-            i.amount AS expected_amount,
-            i.start_date,
-            i.frequency,
-            i.day_of_week,
-            i.start_date + 
-            CASE 
-                WHEN EXTRACT(DOW FROM i.start_date) <= 
-                    CASE 
-                        WHEN i.day_of_week = 'sunday' THEN 0
-                        WHEN i.day_of_week = 'monday' THEN 1
-                        WHEN i.day_of_week = 'tuesday' THEN 2
-                        WHEN i.day_of_week = 'wednesday' THEN 3
-                        WHEN i.day_of_week = 'thursday' THEN 4
-                        WHEN i.day_of_week = 'friday' THEN 5
-                        WHEN i.day_of_week = 'saturday' THEN 6
-                    END 
-                THEN 
-                    ((CASE 
-                        WHEN i.day_of_week = 'sunday' THEN 0
-                        WHEN i.day_of_week = 'monday' THEN 1
-                        WHEN i.day_of_week = 'tuesday' THEN 2
-                        WHEN i.day_of_week = 'wednesday' THEN 3
-                        WHEN i.day_of_week = 'thursday' THEN 4
-                        WHEN i.day_of_week = 'friday' THEN 5
-                        WHEN i.day_of_week = 'saturday' THEN 6
-                    END - EXTRACT(DOW FROM i.start_date)) * INTERVAL '1 day')
-                ELSE 
-                    ((7 + CASE 
-                        WHEN i.day_of_week = 'sunday' THEN 0
-                        WHEN i.day_of_week = 'monday' THEN 1
-                        WHEN i.day_of_week = 'tuesday' THEN 2
-                        WHEN i.day_of_week = 'wednesday' THEN 3
-                        WHEN i.day_of_week = 'thursday' THEN 4
-                        WHEN i.day_of_week = 'friday' THEN 5
-                        WHEN i.day_of_week = 'saturday' THEN 6
-                    END - EXTRACT(DOW FROM i.start_date)) * INTERVAL '1 day')
-            END AS first_period_date,
-            'Income' AS entry_type,
-            i.id AS related_id,
-            NULL::INTEGER AS bill_id,
-            NULL::INTEGER AS expense_id
-        FROM 
-            incomes i
-    ),
-    date_series AS (
-        SELECT 
-            f.related_id,
-            f.name,
-            f.expected_amount,
-            f.entry_type,
-            f.first_period_date,
-            f.first_period_date + 
-            (n * CASE 
-                WHEN f.entry_type = 'Income' THEN 
-                    CASE 
-                        WHEN f.frequency = 'weekly' THEN 7
-                        WHEN f.frequency = 'biweekly' THEN 14
-                        WHEN f.frequency = 'monthly' THEN 30
-                        ELSE 0
-                    END * INTERVAL '1 day'
-                ELSE INTERVAL '0 day'
-            END) AS expected_date,
-            f.related_id AS income_id,
-            NULL::INTEGER AS bill_id,
-            NULL::INTEGER AS expense_id
-        FROM
-            first_period f
-        CROSS JOIN 
-            GENERATE_SERIES(0, 1000) AS n
-    ),
-    bills_series AS (
-        SELECT 
-            b.id AS related_id,
-            b.name,
-            b.amount AS expected_amount,
-            'Bill' AS entry_type,
-            DATE_TRUNC('month', CURRENT_DATE) AS first_period_date,
-            DATE_TRUNC('month', CURRENT_DATE) + (b.due_day - 1) * INTERVAL '1 day' AS expected_date,
-            b.id AS bill_id,
-            NULL::INTEGER AS income_id,
-            NULL::INTEGER AS expense_id
-        FROM 
-            bills b
-    ),
-    expenses_series AS (
-        SELECT 
-            e.id AS related_id,
-            e.description AS name,
-            e.amount AS expected_amount,
-            'Expense' AS entry_type,
-            e.date AS first_period_date,
-            e.date AS expected_date,
-            NULL::INTEGER AS bill_id,
-            NULL::INTEGER AS income_id,
-            e.id AS expense_id
-        FROM 
-            expenses e
-    )
-    SELECT 
-        ROW_NUMBER() OVER (ORDER BY expected_date) AS id,
-        entry_type,
-        income_id,
-        bill_id,
-        expense_id,
-        name,
-        expected_amount,
-        expected_date,
-        cleared
-    FROM (
-        SELECT 
-            related_id, name, expected_amount, entry_type, first_period_date, expected_date, income_id, bill_id, expense_id
-        FROM date_series
-        UNION ALL
-        SELECT 
-            related_id, name, expected_amount, entry_type, first_period_date, expected_date, income_id, bill_id, expense_id
-        FROM bills_series
-        UNION ALL
-        SELECT 
-            related_id, name, expected_amount, entry_type, first_period_date, expected_date, income_id, bill_id, expense_id
-        FROM expenses_series
-    ) AS combined_data
-    LEFT JOIN 
-        expenses e ON (combined_data.entry_type = 'Expense' AND combined_data.expense_id = e.id)
-    ORDER BY 
-        expected_date;
-
-    """
-
-    # SQL to create a unique index on the id column
-    create_unique_index_sql = """
-    CREATE UNIQUE INDEX budget_view_id_idx ON budget_view (id);
-    """
-
+def setup_budget_table():
     try:
-        with db.engine.connect() as conn:
-            # Drop the materialized view if it exists
-            conn.execute(text(drop_materialized_view_sql))
-            print("Materialized view dropped successfully.")
-            
-            # Create the materialized view with the id column
-            conn.execute(text(create_materialized_view_sql))
-            print("Materialized view created successfully.")
-            
-            # Create the unique index on the id column
-            conn.execute(text(create_unique_index_sql))
-            print("Unique index created successfully.")
-            
-            conn.commit()
+        # Check if the table exists in the database
+        table_exists = db.session.execute(
+            text(""" 
+                SELECT EXISTS (
+                    SELECT FROM information_schema.tables 
+                    WHERE table_name = 'budget_table'
+                );
+            """)
+        ).scalar()  # .scalar() fetches the single value from the query result
+
+        if table_exists:
+            # If the table exists, drop it
+            db.session.execute(text("DROP TABLE IF EXISTS budget_table;"))
+            db.session.commit()  # Commit the transaction to drop the table
+            logging.info("budget_table dropped successfully.")
+        
+        # Recreate the table with the updated column names
+        db.session.execute(text("""
+            CREATE TABLE budget_table (
+                entry_id text PRIMARY KEY,
+                entry_type VARCHAR(10) NOT NULL, -- 'income', 'bill', or 'expense'
+                description TEXT NOT NULL,
+                expected_date DATE NOT NULL,
+                actual_date DATE,
+                expected_amount NUMERIC NOT NULL,
+                actual_amount NUMERIC,
+                cleared BOOLEAN DEFAULT FALSE,
+                not_expected BOOLEAN DEFAULT FALSE
+            );
+        """))
+        db.session.commit()  # Commit the transaction to create the table
+        logging.info("budget_table created successfully.")
+
+        # Call the refresh_budget_table stored procedure to populate/refresh the data
+        refresh_budget_tables()  # Now call the refresh function
+
+        return "Budget table setup completed successfully."
+
     except Exception as e:
-        print(f"Error setting up materialized view: {e}")
+        # Handle any exceptions
+        db.session.rollback()  # Rollback in case of error
+        logging.error(f"Error setting up budget table: {str(e)}")
+        return f"Error setting up budget table: {str(e)}"
+
+
+def refresh_budget_tables():
+    """
+    Refreshes the `budget_table` by truncating and repopulating it based on updated data in
+    the `incomes`, `expenses`, and `bills` tables.
+    """
+    try:
+        # Log that the refresh process has started
+        logging.info("Starting refresh of the budget_table...")
+
+        # Get a connection from the engine
+        with db.session.begin():  # Start a transaction context
+            # Truncate the budget_table
+            db.session.execute(text("TRUNCATE TABLE budget_table;"))
+            logging.info("budget_table truncated successfully.")
+
+            # Repopulate the budget_table based on actual table columns
+            db.session.execute(text("""
+                INSERT INTO budget_table (entry_id, entry_type, description, expected_date, actual_date, expected_amount, actual_amount, cleared, not_expected)
+                SELECT 
+                    -- Generating unique entry_id for each row based on month, year, and specific ID
+                    CONCAT(LPAD(EXTRACT(MONTH FROM CURRENT_DATE)::TEXT, 2, '0'),
+                           EXTRACT(YEAR FROM CURRENT_DATE)::TEXT,
+                           CASE
+                               WHEN type = 'bill' THEN 'Bill' || bill_id
+                               WHEN type = 'expense' THEN 'Expense' || expense_id
+                               WHEN type = 'income' THEN 'Income' || income_id
+                           END) AS entry_id,
+                    type AS entry_type,
+                    description,
+                    expected_date,
+                    actual_date,
+                    expected_amount,
+                    actual_amount,
+                    cleared,
+                    not_expected
+                FROM (
+                    -- Income logic
+                    SELECT 'income' AS type, 
+                           name AS description, 
+                           generated_date AS expected_date, 
+                           NULL AS actual_date,
+                           i.amount AS expected_amount, 
+                           NULL AS actual_amount, 
+                           FALSE AS cleared, 
+                           FALSE AS not_expected,
+                           i.income_id,
+                           NULL AS bill_id,
+                           NULL AS expense_id
+                    FROM incomes i,
+                         generate_series(
+                            GREATEST(i.start_date, date_trunc('month', CURRENT_DATE)),
+                            date_trunc('month', CURRENT_DATE) + interval '1 month' - interval '1 day',
+                            CASE 
+                                WHEN i.frequency = 'weekly' THEN interval '1 week'
+                                WHEN i.frequency = 'biweekly' THEN interval '2 weeks'
+                                WHEN i.frequency = 'monthly' THEN interval '1 month'
+                            END
+                         ) AS generated_date
+                    WHERE extract(month FROM generated_date) = extract(month FROM CURRENT_DATE)
+                      AND extract(year FROM generated_date) = extract(year FROM CURRENT_DATE)
+
+                    UNION ALL
+
+                    -- Expense logic
+                    SELECT 'expense' AS type, 
+                           e.description, 
+                           e.date AS expected_date, 
+                           e.date AS actual_date, 
+                           e.amount AS expected_amount, 
+                           e.amount AS actual_amount, 
+                           e.cleared, 
+                           FALSE AS not_expected,
+                           NULL AS income_id,
+                           NULL AS bill_id,
+                           e.expense_id
+                    FROM expenses e
+                    WHERE extract(month FROM e.date) = extract(month FROM CURRENT_DATE)
+                          AND extract(year FROM e.date) = extract(year FROM CURRENT_DATE)
+
+                    UNION ALL
+
+                    -- Bill logic
+                    SELECT 'bill' AS type, 
+                           b.name AS description, 
+                           make_date(extract(year FROM CURRENT_DATE)::INT, extract(month FROM CURRENT_DATE)::INT, b.due_day) AS expected_date,
+                           NULL AS actual_date, 
+                           b.amount AS expected_amount, 
+                           NULL AS actual_amount, 
+                           FALSE AS cleared, 
+                           FALSE AS not_expected,
+                           NULL AS income_id,
+                           b.bill_id,
+                           NULL AS expense_id
+                    FROM bills b
+                    WHERE b.due_day BETWEEN 1 AND 31
+                ) combined_data
+                ON CONFLICT (entry_id) DO NOTHING;  -- Skip if the entry_id already exists
+            """))
+            logging.info("budget_table populated successfully with new data.")
+
+    except Exception as e:
+        # Log any errors that occur
+        logging.error(f"Error refreshing budget_table: {str(e)}")
+        print(f"Error refreshing budget_table: {e}")
+
+def update_budget_entry(entry_id, actual_amount, actual_date, not_expected):
+    """Update an existing budget entry."""
+    try:
+        # Ensure actual_date is handled properly
+        if not actual_date:
+            actual_date = None
+
+        # Log the operation
+        logging.info(f"Updating entry {entry_id} with actual_amount={actual_amount}, actual_date={actual_date}, not_expected={not_expected}")
+
+        # Update the existing entry
+        update_query = """
+        UPDATE budget_table
+        SET actual_amount = :actual_amount,
+            actual_date = :actual_date,
+            not_expected = :not_expected
+        WHERE entry_id = :entry_id;
+        """
+
+        result = db.session.execute(text(update_query), {
+            'entry_id': entry_id,
+            'actual_amount': actual_amount,
+            'actual_date': actual_date,
+            'not_expected': not_expected
+        })
+
+        # Commit changes
+        db.session.commit()
+
+        if result.rowcount == 0:
+            logging.warning(f"No rows updated for entry_id={entry_id}. Please check the data.")
+        else:
+            logging.info("Entry updated successfully.")
+
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        logging.error(f"Error updating budget entry: {e}")
+        raise
