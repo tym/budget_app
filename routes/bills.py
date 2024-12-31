@@ -3,23 +3,12 @@ from models.models import Bill, db, BillCategory
 from datetime import datetime
 import logging
 from sqlalchemy.exc import IntegrityError
+from db_setup import refresh_budget_tables
 
 # Set up logging to a file for easier debugging
 logging.basicConfig(filename='app.log', level=logging.DEBUG)
 
 bp = Blueprint('bills', __name__, url_prefix='/bills')
-
-# Function to call the stored procedure refresh_budget_table using SQLAlchemy
-def call_refresh_budget_table():
-    try:
-        # Call the stored procedure to refresh the budget table
-        db.session.execute(text("CALL refresh_budget_tables();"))
-        db.session.commit()  # Commit the transaction to make the changes effective
-    except Exception as e:
-        # Log the error if something goes wrong
-        db.session.rollback()  # Rollback in case of any error
-        print(f"Error occurred while calling stored procedure: {e}")
-
 
 @bp.route("/", methods=['GET', 'POST'])
 def manage_bills():
@@ -49,7 +38,7 @@ def manage_bills():
         # Create and add the new bill
         new_bill = Bill(
             name=bill_name,
-            amount=float(bill_amount),
+            amount= float(bill_amount)*-1,
             due_day=int(bill_due_day),
             category_id=category.id  # Link to the category ID
         )
@@ -66,7 +55,7 @@ def manage_bills():
     bills = Bill.query.all()  # Fetch all bills
     categories = BillCategory.query.all()  # Fetch all categories
 
-    call_refresh_budget_table()  # Call the stored procedure to refresh the budget table
+    refresh_budget_tables()  # Call the stored procedure to refresh the budget table
 
     return render_template("bills.html", bills=bills, categories=categories, year=year, month=month, now=now)
 
@@ -102,7 +91,7 @@ def edit_bill():
     bill_to_edit.due_day = int(bill_due_day)
     bill_to_edit.category_id = category.id  # Link to the new or existing category
 
-    call_refresh_budget_table()  # Call the stored procedure to refresh the budget table
+    refresh_budget_tables()  # Call the stored procedure to refresh the budget table
 
     db.session.commit()
 
@@ -127,6 +116,7 @@ def delete_bill(bill_id):
 
     current_app.logger.info(f"Bill with id {bill_id} deleted successfully.")
 
-    call_refresh_budget_table()  # Call the stored procedure to refresh the budget table
+    refresh_budget_tables()  # Call the stored procedure to refresh the budget table
     # Redirect back to the bills page after deleting the bill
+    
     return redirect(url_for('bills.manage_bills'))

@@ -3,6 +3,7 @@ from sqlalchemy.sql import text
 import logging
 from models.models import db
 from datetime import datetime
+from db_setup import refresh_budget_tables
 
 logging.basicConfig(level=logging.INFO)
 
@@ -55,6 +56,9 @@ def get_details():
 
     try:
         date = datetime.strptime(date_str, '%Y-%m-%d')
+        year = date.year
+        month = date.month
+
         cleared_condition = ""
         if cleared == "0":  # Means uncleared
             cleared_condition = "AND (bd.cleared IS NULL OR bd.cleared = 'No')"
@@ -73,15 +77,14 @@ def get_details():
                 bd.cleared
             FROM budget_table bd
             WHERE 
-                (YEAR(bd.expected_date) = :year AND MONTH(bd.expected_date) = :month) 
-                OR (YEAR(bd.actual_date) = :year AND MONTH(bd.actual_date) = :month)
+                (EXTRACT(YEAR FROM bd.expected_date) = :year AND EXTRACT(MONTH FROM bd.expected_date) = :month) 
+                OR (EXTRACT(YEAR FROM bd.actual_date) = :year AND EXTRACT(MONTH FROM bd.actual_date) = :month)
                 AND bd.entry_type = :entry_type
                 {cleared_condition}
             ORDER BY bd.expected_date;
-
             """
 
-            result = conn.execute(text(query), {'date': date, 'entry_type': entry_type})
+            result = conn.execute(text(query), {'year': year, 'month': month, 'entry_type': entry_type})
             details = [dict(row._mapping) for row in result]
 
             for entry in details:
@@ -98,36 +101,45 @@ def get_details():
         logging.error(f"Error fetching details for {date_str}: {e}")
         return jsonify([])
 
-@bp.route('/edit-budget-entry', methods=['POST'])
+@bp.route('/edit-budget-entry', methods=['GET', 'POST'])
 def edit_budget_entry():
-    data = request.json
+  # Log the Content-Type of the request
+    logging.info(f"Content-Type: {request.content_type}")
+
+    # Check if the incoming request is JSON
+    if request.is_json:
+        data = request.json
+        logging.info(f"Received JSON data: {data}")
+    else:
+        logging.error("Received data is not in JSON format.")
+        return jsonify({'status': 'error', 'message': 'Invalid content type'}), 400
+
+    # Now process the data as usual
     entry_id = data.get('entry_id')
     actual_amount = data.get('actual_amount')
     actual_date = data.get('actual_date')
     cleared = data.get('cleared')
     not_expected = data.get('not_expected')
-
     try:
-        # Debugging: Log the received data
-        logging.info(f"Received data: {data}")
-
         # Ensure None for empty fields to pass NULL to the database
         actual_amount = None if actual_amount == '' else actual_amount
         actual_date = None if actual_date == '' else actual_date
-        cleared = None if cleared == '' else cleared
-        not_expected = None if not_expected == '' else not_expected
+        cleared = None if cleared == 'False' else cleared
+        not_expected = None if not_expected == 'False' else not_expected
 
         # Update the `expenses` table if the `cleared` field is not None
         if cleared is not None and entry_id.startswith('Expense'):
+            expense_id = entry_id.replace('Expense', '')  # Extract expense_id
             update_expense_sql = """
             UPDATE expenses
             SET cleared = :cleared
             WHERE expense_id = :expense_id
             """
             db.session.execute(text(update_expense_sql), {
-                'cleared': cleared, 
-                'expense_id': entry_id.replace('Expense', '')
+                'cleared': cleared,
+                'expense_id': expense_id
             })
+            logging.info(f"Expense with ID {expense_id} updated with cleared={cleared}.")
 
         # Update the `budget_table`
         update_budget_sql = """
@@ -147,9 +159,7 @@ def edit_budget_entry():
         # Debugging: Log the number of rows affected
         logging.info(f"Rows affected in budget_table: {result.rowcount}")
 
-        # Call the stored procedure to refresh the table
-        refresh_sql = "CALL public.refresh_budget_tables();"
-        db.session.execute(text(refresh_sql))
+        refresh_budget_tables()  # Call the stored procedure to refresh the budget table
 
         # Commit the changes
         db.session.flush()
@@ -163,6 +173,7 @@ def edit_budget_entry():
         db.session.rollback()
         logging.error(f"Error occurred: {e}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
+
 
 
 
@@ -224,7 +235,7 @@ def get_day_data():
                 logging.info(f"Date: {row['day']} | Entry Type: {row['entry_type']} | Actual Amount: {row['actual_amount']} | Expected Amount: {row['expected_amount']}")
 
                 # Process the row based on its entry type
-                if row['entry_type'] == 'income':
+                if row['entry_type'] == 'Income':
                     actual_value = float(row['actual_amount']) if row['actual_amount'] is not None else 0.0
                     expected_value = float(row['expected_amount']) if row['expected_amount'] is not None else 0.0
                     
@@ -233,7 +244,7 @@ def get_day_data():
                     day_data[day]['expected_income'] += expected_value
                     logging.info(f"After Update - Day: {day} | actual_income: {day_data[day]['actual_income']} | expected_income: {day_data[day]['expected_income']}")
 
-                elif row['entry_type'] == 'bill':
+                elif row['entry_type'] == 'Bill':
                     actual_value = float(row['actual_amount']) if row['actual_amount'] is not None else 0.0
                     expected_value = float(row['expected_amount']) if row['expected_amount'] is not None else 0.0
                     
@@ -242,7 +253,7 @@ def get_day_data():
                     day_data[day]['expected_bills'] += expected_value
                     logging.info(f"After Update - Day: {day} | actual_bills: {day_data[day]['actual_bills']} | expected_bills: {day_data[day]['expected_bills']}")
 
-                elif row['entry_type'] == 'expense':
+                elif row['entry_type'] == 'Expense':
                     actual_value = float(row['actual_amount']) if row['actual_amount'] is not None else 0.0
                     expected_value = float(row['expected_amount']) if row['expected_amount'] is not None else 0.0
                     

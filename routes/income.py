@@ -1,20 +1,9 @@
 from flask import Blueprint, render_template, request, redirect, url_for
 from models.models import db, Income
 from datetime import datetime
-from sqlalchemy import text
+from db_setup import refresh_budget_tables
 
 bp = Blueprint('income', __name__, url_prefix='/income')
-
-# Function to call the stored procedure refresh_budget_table using SQLAlchemy
-def call_refresh_budget_table():
-    try:
-        # Call the stored procedure to refresh the budget table
-        db.session.execute(text("CALL refresh_budget_tables();"))
-        db.session.commit()  # Commit the transaction to make the changes effective
-    except Exception as e:
-        # Log the error if something goes wrong
-        db.session.rollback()  # Rollback in case of any error
-        print(f"Error occurred while calling stored procedure: {e}")
 
 @bp.route("/", methods=["GET", "POST"])
 def manage_income():
@@ -37,7 +26,7 @@ def manage_income():
             db.session.commit()
 
             # After adding the income, call the stored procedure to refresh the budget table
-            call_refresh_budget_table()
+            refresh_budget_tables()
 
         except Exception as e:
             return f"Error occurred: {e}", 500
@@ -58,7 +47,7 @@ def delete_income(income_id):
             db.session.commit()
 
             # After deleting the income, call the stored procedure to refresh the budget table
-            call_refresh_budget_table()
+            refresh_budget_tables()
         else:
             return "Income entry not found.", 404
     except Exception as e:
@@ -89,7 +78,7 @@ def edit_income(income_id):
         db.session.commit()
 
         # After editing the income, call the stored procedure to refresh the budget table
-        call_refresh_budget_table()
+        refresh_budget_tables()
 
     except Exception as e:
         return f"Error occurred: {e}", 500

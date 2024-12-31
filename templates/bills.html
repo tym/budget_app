@@ -24,7 +24,7 @@
                 {% for bill in bills %}
                 <tr>
                     <td>{{ bill.name }}</td>
-                    <td>{{ bill.amount }}</td>
+                    <td>{{ bill.amount | abs  }}</td>
                     <td>{{ bill.due_day }}</td>
                     <td>{{ bill.category.name }}</td> <!-- Display the category name -->
                     <td>

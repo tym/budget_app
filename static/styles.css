@@ -493,13 +493,17 @@ a {
 
 
 /* Modal Styling */
+
+#day-details-modal th{
+    background-color: #120c25;
+}
 .modal {
     display: none; /* Hidden by default */
     position: fixed; 
     z-index: 1050; /* Ensure it stays above other elements */
     left: 0;
     top: 0;
-    width: 50%;
+    width: 100%;
     margin: 0 auto;
     height: 100%;
     overflow: auto;

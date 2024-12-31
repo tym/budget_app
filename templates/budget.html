@@ -42,7 +42,6 @@
             <button id="next-month-btn">Next &gt;</button>
         </div>
         <div class="calendar-layout">
-
             <div class="weekly-labels"></div> <!-- Container for dynamic labels -->
             <div id="calendar-grid" class="calendar-grid"></div>
         </div>
@@ -56,7 +55,7 @@
                     <h5 class="modal-title" id="editModalLabel">Edit Entry</h5>
                 </div>
                 <div class="modal-body">
-                    <form>
+                    <form id="editForm">
                         <!-- Hidden input for entryId -->
                         <input type="hidden" id="entryId">
                         <input type="hidden" id="expenseId">
@@ -135,10 +134,13 @@
             <tbody>
                 {% for entry in budget_entries %}
                 <tr data-entry-id="{{ entry.entry_id }}" data-entry-type="{{ entry.entry_type }}">
-                    <td>   <p class="{% if entry.entry_type == 'bill' %}billType{% endif %}
-                    {% if entry.entry_type == 'expense' %}expenseType{% endif %}
-                    {% if entry.entry_type == 'income' %}incomeType{% endif %}">
-                    {{ entry.entry_type }}</p></td>
+                    <td>   
+                        <p class="{% if entry.entry_type == 'Bill' %}billType{% endif %}
+                            {% if entry.entry_type == 'Expense' %}expenseType{% endif %}
+                            {% if entry.entry_type == 'Income' %}incomeType{% endif %}">
+                            {{ entry.entry_type }}
+                        </p>
+                    </td>
                     <td>{{ entry.description }}</td>
                     <td>{{ entry.expected_date.strftime('%m/%d/%Y') }}</td>
                     <td>{{ entry.actual_date.strftime('%m/%d/%Y') if entry.actual_date else '' }}</td>
@@ -179,20 +181,17 @@
 
             // Convert date format from MM/DD/YYYY to YYYY-MM-DD
             function formatDateForInput(dateStr) {
-            if (!dateStr || !dateStr.includes('/')) {
-                return ''; // Return an empty string if the date is invalid or empty
+                if (!dateStr || !dateStr.includes('/')) {
+                    return ''; // Return an empty string if the date is invalid or empty
+                }
+
+                const [month, day, year] = dateStr.split('/');
+                if (!month || !day || !year) {
+                    return '';
+                }
+
+                return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
             }
-
-            const [month, day, year] = dateStr.split('/');
-            
-            // If the split didn't return the expected 3 parts, return an empty string
-            if (!month || !day || !year) {
-                return '';
-            }
-
-            return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-            }   
-
 
             // Populate the modal fields
             document.getElementById('entryId').value = entryId;
@@ -211,35 +210,47 @@
 
     // Add submit handler to save changes
     const form = document.querySelector('#editModal form');
-    form.addEventListener('submit', function(event) {
-        event.preventDefault(); // Prevent the default form submission
+form.addEventListener('submit', function(event) {
+    event.preventDefault(); // Prevent the default form submission
 
-        const data = {
-            entry_id: document.getElementById('entryId').value,
-            expense_id: document.getElementById('expenseId').value, // You need to add expenseId if required
-            expected_amount: document.getElementById('entryAmount').value,
-            expected_date: document.getElementById('entryDate').value,
-            actual_amount: document.getElementById('actualAmount').value,
-            actual_date: document.getElementById('actualDate').value,
-            cleared: document.getElementById('cleared').checked,
-        };
+    // Gather form data
+    const data = {
+        entry_id: document.getElementById('entryId').value,
+        entry_type: document.getElementById('entryType').value,
+        expense_id: document.getElementById('expenseId').value, // Ensure this is populated correctly
+        expected_amount: document.getElementById('entryAmount').value,
+        expected_date: document.getElementById('entryDate').value,
+        actual_amount: document.getElementById('actualAmount').value,
+        actual_date: document.getElementById('actualDate').value,
+        cleared: document.getElementById('cleared').checked,
+        not_expected: document.getElementById('notExpected').checked
+    };
 
-        // Make the POST request to update the budget entry
-        axios.post('/budget/edit-budget-entry', data)
-            .then(response => {
-                if (response.data.status === 'success') {
-                    // Handle success, maybe close the modal and refresh data
-                    $('#editModal').modal('hide');
-                    location.reload(); // Optionally reload the page to reflect changes
-                } else {
-                    alert('Error saving data: ' + response.data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error updating budget entry:', error);
-                alert('Error saving data.');
-            });
+    console.log("Sending data: ", data);  // Debugging line to check the data
+
+    // Make the POST request to update the budget entry
+    axios.post('/budget/edit-budget-entry', data, {
+        headers: {
+            'Content-Type': 'application/json'  // Ensure JSON content type is set
+        }
+    })
+    .then(response => {
+        console.log(response); // Log the response for debugging
+        if (response.data.status === 'success') {
+            // Close modal and reload page or update UI
+            $('#editModal').modal('hide');
+            location.reload(); // Optionally reload the page to reflect changes
+        } else {
+            alert('Error saving data: ' + response.data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error updating budget entry:', error);
+        alert('Error saving data.');
     });
+});
+
+
     </script>
 </div>
 {% endblock %}
