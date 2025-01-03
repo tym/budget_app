@@ -94,7 +94,7 @@
                         <label for="edit-income-start-date">Start Date:</label>
                         <input type="date" id="edit-income-start-date" name="income-start-date" class="form-control">
                     </div>
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <button type="submit" class="btn btn-primary">Update Income</button>
                 </form>
             </div>
         </div>
@@ -109,6 +109,7 @@
         <table>
             <thead>
                 <tr>
+                    <th></th>
                     <th>Source</th>
                     <th>Amount</th>
                     <th>Frequency</th>
@@ -120,6 +121,7 @@
             <tbody>
                 {% for income in incomes %}
                 <tr>
+                    <td class="circleIncome"></td>
                     <td>{{ income.name }}</td>
                     <td>{{ income.amount }}</td>
                     <td>{{ income.frequency }}</td>

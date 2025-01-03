@@ -48,6 +48,7 @@ def budget_home():
         logging.error(f"Error fetching budget entries: {e}")
         return render_template("budget.html", year=year, month=month, budget_entries=[])
 
+# Route to get the details of a specific budget entry
 @bp.route('/get-details', methods=["GET"])
 def get_details():
     date_str = request.args.get('date', type=str)
@@ -101,9 +102,10 @@ def get_details():
         logging.error(f"Error fetching details for {date_str}: {e}")
         return jsonify([])
 
+# Route to edit a specific budget entry
 @bp.route('/edit-budget-entry', methods=['GET', 'POST'])
 def edit_budget_entry():
-  # Log the Content-Type of the request
+    # Log the Content-Type of the request
     logging.info(f"Content-Type: {request.content_type}")
 
     # Check if the incoming request is JSON
@@ -159,8 +161,6 @@ def edit_budget_entry():
         # Debugging: Log the number of rows affected
         logging.info(f"Rows affected in budget_table: {result.rowcount}")
 
-        refresh_budget_tables()  # Call the stored procedure to refresh the budget table
-
         # Commit the changes
         db.session.flush()
         db.session.commit()
@@ -174,10 +174,7 @@ def edit_budget_entry():
         logging.error(f"Error occurred: {e}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
-
-
-
-
+# Route to get day data
 @bp.route('/get-day-data', methods=["GET"])
 def get_day_data():
     year = request.args.get('year', type=int)
@@ -279,14 +276,10 @@ def get_day_data():
                 )
                 previous_expected_balance = day_data[day]['expected_balance']
 
-            logging.info(f"Final day_data: {day_data}")
-
-            logging.debug(f"Rows returned: {rows}")
-            logging.debug(f"month: {month}, year: {year}")
-            logging.debug(f"Initial day_data: {day_data}")
+        logging.debug(f"Final day_data: {day_data}")
 
         return jsonify(day_data)
 
     except Exception as e:
         logging.error(f"Error fetching day data: {e}")
-        return jsonify({})
+        return jsonify({'status': 'error', 'message': str(e)}), 500

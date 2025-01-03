@@ -58,7 +58,7 @@
             <label for="cleared-checkbox">Cleared:</label>
             <input type="checkbox" id="cleared-checkbox" name="cleared-checkbox">
 
-            <button type="submit" class="btn">Save Expense</button>
+            <button type="submit" class="btn">Update Expense</button>
         </form>
     </div>
 </div>
@@ -70,6 +70,7 @@
         <table>
             <thead>
                 <tr>
+                    <th></th>
                     <th>Date</th>
                     <th>Description</th>
                     <th>Amount</th>
@@ -82,6 +83,7 @@
             <tbody>
                 {% for expense in expenses %}
                 <tr>
+                    <td class="circleExpense"></td>
                     <td>{{ expense.date }}</td>
                     <td>{{ expense.description }}</td>
                     <td>{{ expense.amount }}</td>

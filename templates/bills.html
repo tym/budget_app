@@ -13,6 +13,7 @@
         <table>
             <thead>
                 <tr>
+                    <th></th>
                     <th>Name</th>
                     <th>Amount</th>
                     <th>Due Day</th>
@@ -23,6 +24,7 @@
             <tbody>
                 {% for bill in bills %}
                 <tr>
+                    <td class="circleBill"></td>
                     <td>{{ bill.name }}</td>
                     <td>{{ bill.amount | abs  }}</td>
                     <td>{{ bill.due_day }}</td>

@@ -3,20 +3,15 @@
 {% block content %}
 <script type="text/javascript">
     document.addEventListener('DOMContentLoaded', function() {
-        // Get the year and month from Flask variables
         const year = {{ year | int }};
         const month = {{ month | int }};
-    
-        // Initialize currentDate with the passed year and month
         currentDate.setFullYear(year);
-        currentDate.setMonth(month - 1); // Adjust for zero-indexed month
-    
-        // Update the page header to display the current month and year
+        currentDate.setMonth(month - 1);
+
         document.getElementById('current-month').textContent = currentDate.toLocaleDateString('default', {
             year: 'numeric', month: 'long'
         });
 
-        // Fetch day data and populate the calendar
         const url = `/budget/get-day-data?year=${year}&month=${month}`;
         axios.get(url)
             .then(response => {
@@ -38,85 +33,27 @@
     <section class="calendar-section">
         <div class="calendar-header">
             <button id="prev-month-btn">&lt; Previous</button>
-            <h2 id="current-month"></h2> <!-- Dynamically updated -->
+            <h2 id="current-month"></h2>
             <button id="next-month-btn">Next &gt;</button>
         </div>
         <div class="calendar-layout">
-            <div class="weekly-labels"></div> <!-- Container for dynamic labels -->
+            <div class="weekly-labels"></div>
             <div id="calendar-grid" class="calendar-grid"></div>
         </div>
     </section>
 
-    <!-- Modal -->
-    <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="editModalLabel">Edit Entry</h5>
-                </div>
-                <div class="modal-body">
-                    <form id="editForm">
-                        <!-- Hidden input for entryId -->
-                        <input type="hidden" id="entryId">
-                        <input type="hidden" id="expenseId">
-    
-                        <!-- Entry Type (Non-editable) -->
-                        <div class="form-group">
-                            <label for="entryType">Type</label>
-                            <input type="text" readonly class="form-control-plaintext" id="entryType">
-                        </div>
-    
-                        <!-- Name -->
-                        <div class="form-group">
-                            <label for="entryName">Name</label>
-                            <input type="text" readonly class="form-control-plaintext" id="entryName" disabled="disabled">
-                        </div>
-    
-                        <!-- Expected Amount -->
-                        <div class="form-group">
-                            <label for="entryAmount">Expected Amount</label>
-                            <input type="number" readonly class="form-control-plaintext" id="entryAmount" disabled="disabled">
-                        </div>
-    
-                        <!-- Expected Date -->
-                        <div class="form-group">
-                            <label for="entryDate">Expected Date</label>
-                            <input type="date" readonly class="form-control-plaintext" id="entryDate" disabled="disabled">
-                        </div>
-    
-                        <!-- Actual Amount -->
-                        <div class="form-group">
-                            <label for="actualAmount">Actual Amount</label>
-                            <input type="number" class="form-control" id="actualAmount">
-                        </div>
-    
-                        <!-- Actual Date -->
-                        <div class="form-group">
-                            <label for="actualDate">Actual Date</label>
-                            <input type="date" class="form-control" id="actualDate">
-                        </div>
-    
-                        <!-- Cleared Checkbox -->
-                        <div class="form-group">
-                            <label for="cleared">Cleared</label>
-                            <input type="checkbox" id="cleared">
-                        </div>
-    
-                        <!-- Not Expected Checkbox -->
-                        <div class="form-group">
-                            <label for="notExpected">Not Expected</label>
-                            <input type="checkbox" id="notExpected">
-                        </div>
-    
-                        <button type="submit" class="btn btn-primary">Save changes</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- Table displaying budget details -->
+
     <div class="table-container table-details">
+        <div class="filter-container">
+            <label for="entryTypeFilter">Filter by Type:</label>
+            <select id="entryTypeFilter">
+                <option value="">All</option>
+                <option value="Income">Income</option>
+                <option value="Expense">Expense</option>
+                <option value="Bill">Bill</option>
+            </select>
+        </div>
         <table>
             <thead>
                 <tr>
@@ -127,20 +64,14 @@
                     <th>Expected Amount</th>
                     <th>Actual Amount</th>
                     <th>Cleared</th>
-                    <th>Not Expected</th> <!-- New Column -->
-                    <th>Actions</th> <!-- Edit Button -->
+                    <th>Not Expected</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="budget-entries-body">
                 {% for entry in budget_entries %}
                 <tr data-entry-id="{{ entry.entry_id }}" data-entry-type="{{ entry.entry_type }}">
-                    <td>   
-                        <p class="{% if entry.entry_type == 'Bill' %}billType{% endif %}
-                            {% if entry.entry_type == 'Expense' %}expenseType{% endif %}
-                            {% if entry.entry_type == 'Income' %}incomeType{% endif %}">
-                            {{ entry.entry_type }}
-                        </p>
-                    </td>
+                    <td>{{ entry.entry_type }}</td>
                     <td>{{ entry.description }}</td>
                     <td>{{ entry.expected_date.strftime('%m/%d/%Y') }}</td>
                     <td>{{ entry.actual_date.strftime('%m/%d/%Y') if entry.actual_date else '' }}</td>
@@ -151,106 +82,129 @@
                     <td><button class="edit-btn"><i class="fas fa-edit"></i></button></td>
                 </tr>
                 {% endfor %}
-            </tbody>            
+            </tbody>
         </table>
     </div>
 
-    <!-- Include jQuery and Calendar.js -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="{{ url_for('static', filename='calendar.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-    document.querySelectorAll('.edit-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            const row = button.closest('tr');
-            const entryId = row.getAttribute('data-entry-id');
-            const entryType = row.getAttribute('data-entry-type');
-
-            if (!entryId || !entryType) {
-                console.log("Error: Missing entry ID or entry type.");
-                return;
-            }
-
-            const name = row.cells[2].innerText; // Name (description)
-            const expectedAmount = row.cells[5].innerText; // Expected amount
-            const expectedDate = row.cells[3].innerText; // Expected date
-            const actualAmount = row.cells[6].innerText; // Actual amount
-            const actualDate = row.cells[4].innerText; // Actual date
-            const cleared = row.cells[7].innerText === 'Yes'; // Cleared status
-            const notExpected = row.querySelector('.not-expected-select') ? row.querySelector('.not-expected-select').value : 'false'; // Not Expected value
-
-            // Convert date format from MM/DD/YYYY to YYYY-MM-DD
-            function formatDateForInput(dateStr) {
-                if (!dateStr || !dateStr.includes('/')) {
-                    return ''; // Return an empty string if the date is invalid or empty
-                }
-
-                const [month, day, year] = dateStr.split('/');
-                if (!month || !day || !year) {
-                    return '';
-                }
-
-                return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-            }
-
-            // Populate the modal fields
-            document.getElementById('entryId').value = entryId;
-            document.getElementById('entryType').value = entryType;
-            document.getElementById('entryName').value = name;
-            document.getElementById('entryAmount').value = expectedAmount.replace('$', ''); // Remove dollar sign
-            document.getElementById('entryDate').value = formatDateForInput(expectedDate); // Format date for input
-            document.getElementById('actualAmount').value = actualAmount;
-            document.getElementById('actualDate').value = actualDate ? formatDateForInput(actualDate) : ''; // Format actual date if it exists
-            document.getElementById('cleared').checked = cleared;
-            document.getElementById('notExpected').checked = (notExpected === 'true');
-
-            $('#editModal').modal('show');
+        document.querySelectorAll('.edit-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const row = button.closest('tr');
+                const entryId = row.getAttribute('data-entry-id');
+                const entryType = row.getAttribute('data-entry-type');
+                const name = row.cells[1] ? row.cells[1].innerText : '';
+                const expectedAmount = row.cells[4] ? row.cells[4].innerText : '';
+                const expectedDate = row.cells[2] ? row.cells[2].innerText : '';
+                const actualAmount = row.cells[5] ? row.cells[5].innerText : '';
+                const actualDate = row.cells[3] ? row.cells[3].innerText : '';
+                const cleared = row.cells[6] && row.cells[6].innerText === 'Yes';
+                const notExpected = row.cells[7] && row.cells[7].innerText === 'Not Expected';
+    
+                const formatDateForInput = dateStr => dateStr.includes('/') ? dateStr.split('/').reverse().join('-') : '';
+    
+                if (document.getElementById('entryId')) document.getElementById('entryId').value = entryId;
+                if (document.getElementById('entryType')) document.getElementById('entryType').value = entryType;
+                if (document.getElementById('entryName')) document.getElementById('entryName').value = name;
+                if (document.getElementById('entryAmount')) document.getElementById('entryAmount').value = expectedAmount.replace('$', '');
+                if (document.getElementById('entryDate')) document.getElementById('entryDate').value = formatDateForInput(expectedDate);
+                if (document.getElementById('actualAmount')) document.getElementById('actualAmount').value = actualAmount;
+                if (document.getElementById('actualDate')) document.getElementById('actualDate').value = formatDateForInput(actualDate);
+                if (document.getElementById('cleared')) document.getElementById('cleared').checked = cleared;
+                if (document.getElementById('notExpected')) document.getElementById('notExpected').checked = notExpected;
+    
+                $('#editModal').modal('show');
+            });
         });
-    });
-
-    // Add submit handler to save changes
-    const form = document.querySelector('#editModal form');
-form.addEventListener('submit', function(event) {
-    event.preventDefault(); // Prevent the default form submission
-
-    // Gather form data
-    const data = {
-        entry_id: document.getElementById('entryId').value,
-        entry_type: document.getElementById('entryType').value,
-        expense_id: document.getElementById('expenseId').value, // Ensure this is populated correctly
-        expected_amount: document.getElementById('entryAmount').value,
-        expected_date: document.getElementById('entryDate').value,
-        actual_amount: document.getElementById('actualAmount').value,
-        actual_date: document.getElementById('actualDate').value,
-        cleared: document.getElementById('cleared').checked,
-        not_expected: document.getElementById('notExpected').checked
-    };
-
-    console.log("Sending data: ", data);  // Debugging line to check the data
-
-    // Make the POST request to update the budget entry
-    axios.post('/budget/edit-budget-entry', data, {
-        headers: {
-            'Content-Type': 'application/json'  // Ensure JSON content type is set
+    
+        const editForm = document.getElementById('editForm');
+        if (editForm) {
+            editForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                const data = {
+                    entry_id: document.getElementById('entryId') ? document.getElementById('entryId').value : '',
+                    entry_type: document.getElementById('entryType') ? document.getElementById('entryType').value : '',
+                    expense_id: document.getElementById('expenseId') ? document.getElementById('expenseId').value : '',
+                    actual_amount: document.getElementById('actualAmount') ? document.getElementById('actualAmount').value : '',
+                    actual_date: document.getElementById('actualDate') ? document.getElementById('actualDate').value : '',
+                    cleared: document.getElementById('cleared') ? document.getElementById('cleared').checked : false,
+                    not_expected: document.getElementById('notExpected') ? document.getElementById('notExpected').checked : false
+                };
+    
+                axios.post('/budget/edit-budget-entry', data)
+                .then(response => {
+                    if (response.data.status === 'success') {
+                        $('#editModal').modal('hide'); // Closes the modal
+                        location.reload(); // Refreshes to show updated data
+                    } else {
+                        alert('Error saving data: ' + response.data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error updating budget entry:', error);
+                    alert('Error saving data.');
+                });
+            });
         }
-    })
-    .then(response => {
-        console.log(response); // Log the response for debugging
-        if (response.data.status === 'success') {
-            // Close modal and reload page or update UI
-            $('#editModal').modal('hide');
-            location.reload(); // Optionally reload the page to reflect changes
-        } else {
-            alert('Error saving data: ' + response.data.message);
+    
+        const entryTypeFilter = document.getElementById('entryTypeFilter');
+        if (entryTypeFilter) {
+            entryTypeFilter.addEventListener('change', function () {
+                const type = this.value;
+    
+                const url = `/budget/get-day-data?year=${currentDate.getFullYear()}&month=${currentDate.getMonth() + 1}&entry_type=${type}`;
+                axios.get(url)
+                .then(response => {
+                    const filteredData = response.data;
+                    populateBudgetTable(filteredData);
+                })
+                .catch(error => console.error('Error filtering table:', error));
+            });
         }
-    })
-    .catch(error => {
-        console.error('Error updating budget entry:', error);
-        alert('Error saving data.');
-    });
-});
+    
+        function populateBudgetTable(data) {
+    const tbody = document.getElementById('budget-entries-body');
+    if (tbody) {
+        tbody.innerHTML = ''; // Clear the current rows
 
+        // Convert the object into an array of entries
+        const entries = Object.keys(data).map(date => {
+            const entry = data[date];
+            return {
+                entry_type: entry.entry_type,
+                description: entry.description,
+                expected_date: entry.expected_date,
+                actual_date: entry.actual_date,
+                expected_amount: entry.expected_amount,
+                actual_amount: entry.actual_amount,
+                cleared: entry.cleared,
+                not_expected: entry.not_expected
+            };
+        });
+
+        // Now you can safely iterate over entries
+        entries.forEach(entry => {
+            const row = `
+                <tr>
+                    <td>${entry.entry_type}</td>
+                    <td>${entry.description}</td>
+                    <td>${entry.expected_date}</td>
+                    <td>${entry.actual_date}</td>
+                    <td>${entry.expected_amount}</td>
+                    <td>${entry.actual_amount}</td>
+                    <td>${entry.cleared ? 'Yes' : 'No'}</td>
+                    <td>${entry.not_expected ? 'Not Expected' : ''}</td>
+                    <td><button class="edit-btn"><i class="fas fa-edit"></i></button></td>
+                </tr>
+            `;
+            tbody.insertAdjacentHTML('beforeend', row);
+        });
+    }
+}
 
     </script>
+    
 </div>
 {% endblock %}

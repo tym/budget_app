@@ -308,6 +308,18 @@ button:focus, .btn:focus {
     outline: none;
 }
 
+.sort-btn{
+    background: transparent; /* Gradient background */
+    color: #fff;
+    border: none; /* Remove borders */
+    font-size: 0.9em;
+    border-radius: 20px; /* Remove rounded corners */
+    cursor: pointer;
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+    margin: 10px;
+    padding: 0.5rem 1rem;
+}
+
 /* Custom oval pill for income */
 .incomeType {
     background-color: #70a585;
@@ -319,6 +331,7 @@ button:focus, .btn:focus {
     margin: 5px;
     color: #0f2919;
     font-weight: bold;
+    padding: 2px 5px;
   }
   
   .billType{
@@ -331,7 +344,49 @@ button:focus, .btn:focus {
     margin: 5px;
     color: #e8c3c7;
     font-weight: bold;
+    padding: 2px 5px;
   }
+
+  .expenseType{
+    background-color: #a8a8a8;
+    color: white;
+    font-size: 13px;
+    border-radius: 50px;
+    text-transform: capitalize;
+    text-align: center;
+    margin: 5px;
+    color: #464646;
+    font-weight: bold;
+    padding: 2px 5px;
+  }
+
+  .circleIncome {
+
+    clip-path: circle(5px);
+    background-color: #70a585;
+    vertical-align: middle;
+    padding: 10px;
+    
+  }
+
+  .circleBill {
+
+    clip-path: circle(5px);
+    background-color: #a74946;
+    vertical-align: middle;
+    padding: 10px;
+    
+  }
+
+  .circleExpense {
+
+    clip-path: circle(5px);
+    background-color: #a8a8a8;
+    vertical-align: middle;
+    padding: 10px;
+    
+  }
+
 footer {
     background-color: #23232f;
     padding: 1rem;
