@@ -41,7 +41,7 @@ def budget_home():
             """
             result = conn.execute(text(query), {'year': year, 'month': month})
             budget_entries = [dict(row._mapping) for row in result]
-
+           
         return render_template("budget.html", year=year, month=month, budget_entries=budget_entries)
 
     except Exception as e:
@@ -283,3 +283,40 @@ def get_day_data():
     except Exception as e:
         logging.error(f"Error fetching day data: {e}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
+
+# Route to fetch budget entries
+@bp.route('/get-budget-entries', methods=['GET'])
+def get_budget_entries():
+    # Get the query parameters from the request
+    year = request.args.get('year', type=int)
+    month = request.args.get('month', type=int)
+    entry_type = request.args.get('entry_type', type=str)
+
+    # Make sure the parameters are valid
+    if not year or not month or not entry_type:
+        return jsonify({'error': 'Missing required parameters'}), 400
+
+    try:
+        # Connect to the database and fetch the budget entries
+        with db.engine.connect() as conn:
+            query = """
+            SELECT 
+                entry_id, entry_type, description, expected_date, expected_amount,
+                actual_amount, actual_date, cleared, not_expected
+            FROM budget_table
+            WHERE EXTRACT(YEAR FROM expected_date) = :year
+            AND EXTRACT(MONTH FROM expected_date) = :month
+            AND entry_type = :entry_type
+            ORDER BY expected_date;
+            """
+            result = conn.execute(text(query), {'year': year, 'month': month, 'entry_type': entry_type})
+            
+            # Convert the result to a list of dictionaries
+            entries = [dict(row._mapping) for row in result]
+
+        # Return the result as a JSON response
+        return jsonify(entries)
+
+    except Exception as e:
+        logging.error(f"Error fetching budget entries: {e}")
+        return jsonify({'error': 'Failed to fetch budget entries'}), 500

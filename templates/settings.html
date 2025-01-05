@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Settings</h2>
+
+<!-- Plaid Link Button -->
+<div id="link-plaid-container">
+    <button id="link-plaid-button" class="btn">Link Bank Account</button>
+</div>
+
+<script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var linkButton = document.getElementById('link-plaid-button');
+    var linkToken = '{{ link_token }}';  // Pass the generated link token to the frontend
+
+    var handler = Plaid.create({
+        clientName: 'Your App Name',
+        env: 'sandbox',  // Adjust the environment as necessary
+        key: 'your_plaid_public_key',
+        token: linkToken,
+        onSuccess: function(public_token, metadata) {
+            // Send the public token to your server to exchange for an access token
+            fetch('/exchange_public_token', {
+                method: 'POST',
+                body: JSON.stringify({public_token: public_token}),
+                headers: {'Content-Type': 'application/json'}
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Handle successful linking, save access token to database, etc.
+                alert('Account successfully linked!');
+            })
+            .catch(error => console.error('Error linking account:', error));
+        },
+        onExit: function(error, metadata) {
+            // Handle the case when the user exits the Link flow
+            if (error) {
+                alert('Error linking account');
+            }
+        }
+    });
+
+    linkButton.addEventListener('click', function () {
+        handler.open();
+    });
+});
+</script>
+{% endblock %}

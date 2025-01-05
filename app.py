@@ -3,13 +3,15 @@ from flask.cli import with_appcontext
 from flask_migrate import Migrate
 import click
 from datetime import datetime
-from models.models import db
+from models.models import db, User
 from routes.budget import bp as budget_bp
 from routes.income import bp as income_bp
 from routes.bills import bp as bills_bp
 from routes.expenses import bp as expenses_bp
 from db_setup import setup_budget_table, refresh_budget_tables  # Correct imports
 import logging
+from flask_login import LoginManager
+
 
 # Configure the logging level and format
 logging.basicConfig(
@@ -23,6 +25,11 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object('config.Config')  # Load config from object
     
+
+    login_manager = LoginManager(app)
+    login_manager.login_view = 'login' 
+    
+
     # Initialize extensions
     db.init_app(app)
     migrate = Migrate(app, db)
@@ -32,6 +39,11 @@ def create_app():
     app.register_blueprint(income_bp)
     app.register_blueprint(bills_bp)
     app.register_blueprint(expenses_bp)
+
+    @login_manager.user_loader
+    def load_user(user_id):
+        return User.query.get(int(user_id))   
+      
 
     @app.route("/")
     def index():
@@ -57,11 +69,13 @@ def create_app():
         click.echo("Refreshing the budget table...")
         refresh_budget_tables()
         click.echo("Budget table refreshed successfully.")
+    
 
     return app
 
 
 if __name__ == "__main__":
+
     # Create the app and run it
     app = create_app()
     with app.app_context():

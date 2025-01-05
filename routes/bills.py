@@ -17,10 +17,17 @@ def manage_bills():
         bill_name = request.form.get('bill-name')
         bill_amount = request.form.get('bill-amount')
         bill_due_day = request.form.get('bill-due_day')
+        bill_start_day = request.form.get('bill-start_date')  # Get the start date from the form
         bill_category = request.form.get('bill-category')
 
         if not bill_name or not bill_amount or not bill_due_day:
             return 'Please fill out all fields', 400
+
+        # Convert start date string to a datetime.date object
+        try:
+            bill_start_date = datetime.strptime(bill_start_day, '%Y-%m-%d').date()
+        except ValueError:
+            return 'Invalid start date format', 400
 
         # Fetch the category ID from BillCategory or create a new category if not found
         category = BillCategory.query.filter_by(name=bill_category).first()
@@ -38,8 +45,9 @@ def manage_bills():
         # Create and add the new bill
         new_bill = Bill(
             name=bill_name,
-            amount= float(bill_amount)*-1,
+            amount=float(bill_amount)*-1,  # Assuming negative amount for bills
             due_day=int(bill_due_day),
+            start_date=bill_start_date,  # Use the converted start_date
             category_id=category.id  # Link to the category ID
         )
         db.session.add(new_bill)
@@ -66,13 +74,26 @@ def edit_bill():
     bill_name = request.form.get('bill-name')
     bill_amount = request.form.get('bill-amount')
     bill_due_day = request.form.get('bill-due_day')
+    bill_start_day = request.form.get('bill-start_date')  # Get the start date from the form
     bill_category = request.form.get('bill-category')
+
+    print(f"Received bill data: {bill_id}, {bill_name}, {bill_amount}, {bill_due_day}, {bill_start_day}, {bill_category}")
 
     # Find the bill by its ID
     bill_to_edit = Bill.query.get(bill_id)
 
     if not bill_to_edit:
         return jsonify({'status': 'error', 'message': 'Bill not found'}), 404
+
+    # Ensure start date is provided
+    if not bill_start_day:
+        return 'Start Date is required', 400
+
+    # Convert start date string to a datetime.date object
+    try:
+        bill_start_date = datetime.strptime(bill_start_day, '%Y-%m-%d').date()
+    except ValueError:
+        return 'Invalid start date format', 400
 
     # Check if the category exists or create it
     category = BillCategory.query.filter_by(name=bill_category).first()
@@ -89,6 +110,7 @@ def edit_bill():
     bill_to_edit.name = bill_name
     bill_to_edit.amount = float(bill_amount)
     bill_to_edit.due_day = int(bill_due_day)
+    bill_to_edit.start_date = bill_start_date  # Use the converted start_date
     bill_to_edit.category_id = category.id  # Link to the new or existing category
 
     refresh_budget_tables()  # Call the stored procedure to refresh the budget table
@@ -118,5 +140,4 @@ def delete_bill(bill_id):
 
     refresh_budget_tables()  # Call the stored procedure to refresh the budget table
     # Redirect back to the bills page after deleting the bill
-    
     return redirect(url_for('bills.manage_bills'))

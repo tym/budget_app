@@ -1,0 +1,9 @@
+from flask_login import login_required
+from flask import Blueprint, render_template
+
+bp = Blueprint('login_required', __name__, url_prefix='/login_required')
+
+@bp.route('/dashboard')
+@login_required
+def dashboard():
+    return render_template('dashboard.html')  # This will only be accessible to logged-in users
