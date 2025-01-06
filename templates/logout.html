@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h1>You have been logged out</h1>
+    <p>Thank you for using our application. We hope to see you again soon!</p>
+    <a href="{{ url_for('auth.login') }}" class="btn btn-primary">Go to Login Page</a>
+</div>
+{% endblock %}
+

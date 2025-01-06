@@ -6,12 +6,13 @@
         <h1>Welcome, {{ current_user.username }}!</h1>
         <p>Email: {{ current_user.email }}</p>
 
-        <form method="POST" action="{{ url_for('logout') }}">
+        <form method="POST" action="{{ url_for('logout.logout') }}">
             <button type="submit" class="btn btn-danger">Logout</button>
         </form>
         {% else %}
-        <p>You are not logged in. <a href="{{ url_for('login') }}">Login here</a></p>
+        <p>You are not logged in. <a href="{{ url_for('auth.login') }}">Login here</a></p>
         {% endif %}
     </div>
 
-{% endblock %}
+
+{% endblock content %}
