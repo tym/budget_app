@@ -11,9 +11,7 @@ from models.models import Expense, db
 
 bp = Blueprint('settings', __name__, url_prefix='/settings')
 
-PLAID_CLIENT_ID = '677b2f530e534e0022b15cbe'
-PLAID_SECRET = 'ee4bb64cb716566c8cd8b45fdaa17f'
-PLAID_ENV = 'sandbox'  # Change to 'development' or 'production' as needed
+PLAID_CLIENT_to 'development' or 'production' as needed
 # Initialize the API client
 api_client = ApiClient()
 api_client.configuration.api_key["PLAID-CLIENT-ID"] = PLAID_CLIENT_ID
